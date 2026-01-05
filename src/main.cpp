@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <limine.h>
+#include "limine.h"
 #include <stddef.h>
 
 __attribute__((used, section(".limine_requests")))
@@ -25,7 +25,7 @@ extern "C" void kmain(void) {
 	}
 
 	struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
-	volatile uint32_t *fb_ptr = framebuffer->address;
+	uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
 
 	for (uint32_t i = 0; i < 100; i++) {
 		fb_ptr[i] = 0xffffff;
