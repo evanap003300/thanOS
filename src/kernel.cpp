@@ -38,6 +38,8 @@ extern "C" void kmain(void) {
 	terminal.print("Welcome to thanOS v0.1\n");
 	terminal.print("---------------------------------\n");
 	terminal.print_number(67);
+	terminal.print("\n");
+	terminal.print_hex(4096);
 
 	hcf();
 }

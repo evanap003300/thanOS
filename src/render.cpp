@@ -131,4 +131,36 @@ void Renderer::print_number(int number) {
 	
 }
 
+void Renderer::print_hex(uint32_t number) {
+	print("0x");
+
+	if (number == 0) {
+		draw_char('0');
+		return;
+	}
+
+	char buffer[16];
+	int i = 0;
+
+	while (number > 0) {
+		int digit = number % 16;
+		
+		if (digit < 10) {
+			buffer[i] = digit + '0';
+		} else {
+			buffer[i] = (digit-10) + 'A';
+		}
+
+		number /= 16;
+		i++;
+	}
+
+	i--;
+
+	while (i >= 0) {
+		draw_char(buffer[i]);
+		i--;
+	}
+}
+
 
