@@ -53,7 +53,7 @@ void Renderer::clear() {
     	uint64_t height = framebuffer->height;
 
     	for (uint64_t i = 0; i < width * height; i++) {
-        	fb_ptr[i] = 0x0E0E0E;
+        	fb_ptr[i] = 0xFF0E0E0E;
     	}
 
 	cursor_x = 0;
@@ -81,7 +81,8 @@ void Renderer::print(const char* str) {
 
 void Renderer::scroll() {
 	uint32_t* fb_ptr = (uint32_t*)framebuffer->address; 
-	uint32_t color = 0x0E0E0E0E;
+	uint32_t bg_color = 0xFF0E0E0E;
+	uint32_t color = bg_color;
 
 	for (uint64_t i = 16; i < framebuffer->height; i++) {
 		for (uint64_t j = 0; j < framebuffer->width; j++) {
@@ -92,7 +93,6 @@ void Renderer::scroll() {
 	}
 
 	uint64_t last_row_start = (framebuffer->height - 16) * framebuffer->width;
-	uint32_t bg_color = 0x0E0E0E0E;
 
 	for (uint64_t i = last_row_start; i < last_row_start + (16 * framebuffer->width); i++) {
 		fb_ptr[i] = bg_color;
