@@ -31,7 +31,7 @@ SECTIONS
 		*(.rodata .rodata*)
 	} :rodata
 
-	.note.gnu.build-id {
+	.note.gnu.build-id : {
 		*(.note.gnu.build-id)
 	} :rodata
 
@@ -48,7 +48,7 @@ SECTIONS
 		KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
 		KEEP(*(.init_array .ctors))
 		__init_array_end = .;
-	} :rodata
+	} :data
 
 	. = ALIGN(CONSTANT(MAXPAGESIZE));
 
@@ -57,7 +57,7 @@ SECTIONS
 		KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
 		KEEP(*(.fini_array .dtors))
 		__fini_array_end = .;
-	} :rodata
+	} :data
 
 	.bss : {
 		*(.bss .bss.*)
