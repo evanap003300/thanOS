@@ -1,0 +1,4 @@
+kernel.elf
+thanOS.iso
+src/kernel.o
+src/render.o
