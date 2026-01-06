@@ -35,11 +35,10 @@ extern "C" void kmain(void) {
 	Renderer terminal(framebuffer);
 	terminal.clear();
 	terminal.print("System Initialized...\n");
-	terminal.print("Welcome to thanOS v0.1\n");
+	terminal.printf("Welcome to thanOS v%d.%d\n", 1, 0);
+	terminal.printf("Kernel Address: %x\n", &kmain);
+	terminal.printf("Status: %s\n", "Online");
 	terminal.print("---------------------------------\n");
-	terminal.print_number(67);
-	terminal.print("\n");
-	terminal.print_hex(4096);
 
 	hcf();
 }

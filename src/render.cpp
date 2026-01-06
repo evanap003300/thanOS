@@ -163,4 +163,56 @@ void Renderer::print_hex(uint32_t number) {
 	}
 }
 
+void Renderer::printf(const char* format, ...) {
+	va_list args;
+	va_start(args, format);
+
+	for (int i = 0; format[i] != '\0'; i++) {
+		if (format[i] != '%') {
+			
+			if (format[i] == '\n') {
+				next_line();
+			} else { 
+				draw_char(format[i]);
+			}
+			continue;
+		}
+		
+		i++;
+		
+		switch (format[i]) {
+			case 's': {
+				const char* str = va_arg(args, const char*);
+				print(str);
+				break;
+			}
+			case 'c': {
+				char c = (char)va_arg(args, int);
+				draw_char(c);
+				break;
+			}
+			case 'd': {
+				int number = va_arg(args, int);
+				print_number(number);
+				break;
+			}
+			case 'x': {
+				uint32_t number = va_arg(args, uint32_t);
+				print_hex(number);
+				break;
+			}
+			case '%': {
+				draw_char('%');
+				break;
+			}
+			default: {
+				draw_char('?');
+				break;
+			}
+		}
+	}
+	
+	va_end(args);
+}
+
 
