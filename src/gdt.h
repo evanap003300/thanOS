@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-struct __attribute__((packed)) GDTENTRY {
+struct __attribute__((packed)) GDTEntry {
 	uint16_t limit_low;
 	uint16_t base_low;
 	uint8_t base_middle;
