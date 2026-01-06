@@ -26,11 +26,18 @@ extern "C" void kmain(void) {
 	}
 
 	struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
-	uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
 
-	for (uint32_t i = 0; i < 100; i++) {
-		fb_ptr[i] = 0xffffff;
-	}
+    	if (framebuffer == NULL) {
+        	hcf();
+    	}
+
+    	uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
+    	size_t width = framebuffer->width;
+    	size_t height = framebuffer->height;
+
+    	for (size_t i = 0; i < width * height; i++) {
+        	fb_ptr[i] = 0xFFFFFFFF;
+    	}
 
 	hcf();
 }
