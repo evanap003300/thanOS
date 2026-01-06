@@ -1,4 +1,4 @@
-#ifndef FONT8x16_H
+#ifndef FONT8x16_H
 
 #ifndef FONT8x16_IMPLEMENTATION
     unsigned char font8x16[][16];

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "limine.h"
 #include <stddef.h>
+#include "render.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -36,8 +37,20 @@ extern "C" void kmain(void) {
     	size_t height = framebuffer->height;
 
     	for (size_t i = 0; i < width * height; i++) {
-        	fb_ptr[i] = 0xFFFFFFFF;
+        	fb_ptr[i] = 0x0E0E0E;
     	}
+
+	const char* message = "Hello World from thanOS!";
+
+	int X = 50;
+	int Y = 50;
+	uint32_t WHITE = 0xFFFFFFFF;
+	int BYTE_LEN = 8;
+
+	for (int i = 0; message[i] != '\0'; i++) {
+		draw_char(framebuffer, message[i], X, Y, WHITE);
+		X += BYTE_LEN;
+	}
 
 	hcf();
 }

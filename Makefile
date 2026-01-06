@@ -4,16 +4,16 @@ ISO := thanOS.iso
 CXX := x86_64-elf-g++
 LD := x86_64-elf-ld
 
-CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine
+CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine -mcmodel=kernel
 
-SRCS := src/kernel.cpp
-OBJS := src/kernel.o
+SRCS := $(wildcard src/*.cpp)
+OBJS := $(SRCS:.cpp=.o)
 
 .PHONY: all clean run 
 
 all: $(ISO) 
 
-%.o: %.cpp
+src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(KERNEL): $(OBJS) 
