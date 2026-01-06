@@ -19,12 +19,14 @@ all: $(ISO)
 $(KERNEL): $(OBJS) 
 	$(LD) -T linker.ld -o $@ $(OBJS) -z max-page-size=0x1000
 
-$(ISO): $(KERNEL) limine.cfg
+$(ISO): $(KERNEL) limine.conf
 	mkdir -p iso_root/limine
 	mkdir -p iso_root/EFI/BOOT
 
 	cp $(KERNEL) iso_root/
-	cp limine.cfg iso_root/limine/ 
+
+	cp limine.conf iso_root/
+	cp limine.conf iso_root/limine/ 
 
 	cp Limine/limine-bios.sys Limine/limine-bios-cd.bin Limine/limine-uefi-cd.bin iso_root/limine/
 	cp Limine/BOOTX64.EFI iso_root/EFI/BOOT/
