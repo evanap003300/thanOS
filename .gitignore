@@ -2,3 +2,5 @@ kernel.elf
 thanOS.iso
 src/kernel.o
 src/render.o
+src/gdt.o
+src/gdt_asm.o

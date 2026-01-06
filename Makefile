@@ -4,10 +4,17 @@ ISO := thanOS.iso
 CXX := x86_64-elf-g++
 LD := x86_64-elf-ld
 
+AS := nasm
+
 CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine -mcmodel=kernel
 
-SRCS := $(wildcard src/*.cpp)
-OBJS := $(SRCS:.cpp=.o)
+CPP_SRCS := $(wildcard src/*.cpp)
+ASM_SRCS := $(wildcard src/*.asm)
+
+CPP_OBJS := $(CPP_SRCS:.cpp=.o)
+ASM_OBJS := $(ASM_SRCS:.asm=.o)
+
+OBJS := $(CPP_OBJS) $(ASM_OBJS)
 
 .PHONY: all clean run 
 
@@ -46,3 +53,6 @@ run: $(ISO)
 
 clean:
 	rm -f $(OBJS) $(KERNEL) $(ISO)
+
+src/%.o: src/%.asm
+	$(AS) -f elf64 $< -o $@
