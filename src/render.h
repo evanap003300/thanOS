@@ -1,6 +1,7 @@
 #pragma once 
 #include <stdint.h>
 #include "limine.h"
+#include <stdarg.h>
 
 class Renderer {
 	public:
@@ -17,4 +18,9 @@ class Renderer {
 		void next_line();
 		void print(const char* str);
 		void scroll();
+
+		void print_number(int number);
+		void print_hex(uint32_t number);
+
+		void printf(const char* format, ...);
 };

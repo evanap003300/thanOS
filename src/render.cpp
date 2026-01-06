@@ -101,3 +101,34 @@ void Renderer::scroll() {
 	cursor_x = 0;
 	cursor_y -= 16;
 }
+
+void Renderer::print_number(int number) {
+	if (number == 0) {
+		draw_char('0');
+		return;
+	}
+
+	if (number < 0) {
+		draw_char('-');
+		number = -1 * number;
+	}
+
+	char buffer[16];
+	int i = 0;
+
+	while (number > 0) {
+		buffer[i] = (number % 10) + '0';
+		number /= 10;
+		i++;
+	}
+	
+	i--;
+
+	while (i >= 0) {
+		draw_char(buffer[i]);
+		i--;
+	}
+	
+}
+
+
