@@ -37,6 +37,7 @@ extern "C" void kmain(void) {
 	terminal.print("System Initialized...\n");
 	terminal.print("Welcome to thanOS v0.1\n");
 	terminal.print("---------------------------------\n");
+	terminal.scroll();
 
 	hcf();
 }

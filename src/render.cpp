@@ -26,12 +26,16 @@ void Renderer::draw_char(char c) {
 	uint16_t HEIGHT = 16;
 	uint16_t WIDTH = 8;
 
+	uint32_t bg_color = 0x0E0E0E0E;
+
 	for (uint16_t i = 0; i < HEIGHT; i++) {
 		unsigned char font_row = font8x16[(unsigned char)c][i];
 		for (uint16_t j = 0; j < WIDTH; j++) {
+			uint64_t offset = (cursor_y+i) * stride + (cursor_x+j);
 			if ((font_row >> (7-j)) & 1) {
-				uint64_t offset = (cursor_y+i) * stride + (cursor_x+j);
 				fb_ptr[offset] = color;
+			} else {
+				fb_ptr[offset] = bg_color;
 			}	
 		}
 	}
@@ -76,8 +80,24 @@ void Renderer::print(const char* str) {
 }
 
 void Renderer::scroll() {
-	// shift all the text on the screen up and remove the text on the top
-	
+	uint32_t* fb_ptr = (uint32_t*)framebuffer->address; 
+	uint32_t color = 0x0E0E0E0E;
+
+	for (uint64_t i = 16; i < framebuffer->height; i++) {
+		for (uint64_t j = 0; j < framebuffer->width; j++) {
+			uint64_t position = i*framebuffer->width + j;
+			color = fb_ptr[position];
+			fb_ptr[position - (16*framebuffer->width)] = color;
+		}
+	}
+
+	uint64_t last_row_start = (framebuffer->height - 16) * framebuffer->width;
+	uint32_t bg_color = 0x0E0E0E0E;
+
+	for (uint64_t i = last_row_start; i < last_row_start + (16 * framebuffer->width); i++) {
+		fb_ptr[i] = bg_color;
+	}
+
 	cursor_x = 0;
 	cursor_y -= 16;
 }
