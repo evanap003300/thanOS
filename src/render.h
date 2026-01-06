@@ -2,4 +2,19 @@
 #include <stdint.h>
 #include "limine.h"
 
-void draw_char(struct limine_framebuffer* framebuffer, char c, int x, int y, uint32_t color);
+class Renderer {
+	public:
+		struct limine_framebuffer* framebuffer;
+		uint32_t color;
+		uint32_t cursor_x;
+		uint32_t cursor_y;
+
+		Renderer(struct limine_framebuffer* target_framebuffer);
+
+		void put_pixel(uint32_t x, uint32_t y, uint32_t color);
+		void draw_char(char c);
+		void clear();
+		void next_line();
+		void print(const char* str);
+		void scroll();
+};

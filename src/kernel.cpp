@@ -32,25 +32,11 @@ extern "C" void kmain(void) {
         	hcf();
     	}
 
-    	uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
-    	size_t width = framebuffer->width;
-    	size_t height = framebuffer->height;
-
-    	for (size_t i = 0; i < width * height; i++) {
-        	fb_ptr[i] = 0x0E0E0E;
-    	}
-
-	const char* message = "Hello World from thanOS!";
-
-	int X = 50;
-	int Y = 50;
-	uint32_t WHITE = 0xFFFFFFFF;
-	int BYTE_LEN = 8;
-
-	for (int i = 0; message[i] != '\0'; i++) {
-		draw_char(framebuffer, message[i], X, Y, WHITE);
-		X += BYTE_LEN;
-	}
+	Renderer terminal(framebuffer);
+	terminal.clear();
+	terminal.print("System Initialized...\n");
+	terminal.print("Welcome to thanOS v0.1\n");
+	terminal.print("---------------------------------\n");
 
 	hcf();
 }
