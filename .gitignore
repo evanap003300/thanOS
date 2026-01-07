@@ -4,3 +4,5 @@ src/kernel.o
 src/render.o
 src/gdt.o
 src/gdt_asm.o
+src/idt.o
+src/idt_asm.o
