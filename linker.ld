@@ -1,12 +1,14 @@
 OUTPUT_FORMAT(elf64-x86-64)
 ENTRY(kmain)
 
+/* FLAGS 3-bits: (read)(write)(exec)*/ 
+
 PHDRS
 {
-	limine_requests PT_LOAD;
-	text    	PT_LOAD;
-	rodata  	PT_LOAD;
-	data    	PT_LOAD;
+	limine_requests PT_LOAD      FLAGS(6);
+	text    	PT_LOAD      FLAGS(5); 
+	rodata  	PT_LOAD      FLAGS(4);
+	data    	PT_LOAD      FLAGS(6);
 }
 
 SECTIONS
