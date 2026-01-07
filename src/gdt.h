@@ -21,9 +21,9 @@ class GDT {
 		// 1: Kernel code (ring 0)
 		// 2: Kernel data (ring 0)
 		// ... add other rings later for user
-		GDTEntry gdt_entries[3];
-		GDTDescriptor gdt_descriptor;
-		void init();
+		static GDTEntry gdt_entries[3];
+		static GDTDescriptor gdt_descriptor;
+		static void init();
 };
 
 extern "C" void load_gdt(uint64_t gdt_descriptor_address);

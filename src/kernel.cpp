@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include "render.h"
 #include "idt.h"
+#include "gdt.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -19,6 +20,8 @@ static void hcf(void) {
 	}
 }
 
+Renderer terminal;
+
 // Kernel entry point
 extern "C" void kmain(void) {
 	
@@ -33,16 +36,32 @@ extern "C" void kmain(void) {
         	hcf();
     	}
 
-	Renderer terminal(framebuffer);
+	terminal = Renderer(framebuffer);
+
 	terminal.clear();
 	terminal.printf("System Initialized...\n");
 	terminal.printf("Welcome to thanOS v%d.%d\n", 1, 0);
 	terminal.printf("Kernel Address: %x\n", &kmain);
 	terminal.printf("Status: %s\n", "Online");
 	terminal.print("---------------------------------\n");
+	
+	terminal.printf("Init GDT... \n");
+	GDT::init();
+	terminal.printf("GDT Loaded!\n");
+	
 	terminal.printf("Init IDT... \n");
 	IDT::init();
 	terminal.printf("IDT Loaded!\n");
+
+	// testing divide by zero (should cause interrupt)
+	
+	terminal.printf("Testing Interrupts...\n");
+	
+	volatile int a = 5;
+	volatile int b = 0;
+	int c = a / b;
+
+	terminal.printf("Ts shouldn't happen :(%d\n", c);
 
 	hcf();
 }

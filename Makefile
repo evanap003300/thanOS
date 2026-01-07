@@ -6,7 +6,7 @@ LD := x86_64-elf-ld
 
 AS := nasm
 
-CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine -mcmodel=kernel
+CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine -mcmodel=kernel -mno-red-zone -mgeneral-regs-only
 
 CPP_SRCS := $(wildcard src/*.cpp)
 ASM_SRCS := $(wildcard src/*.asm)

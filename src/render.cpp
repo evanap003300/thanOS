@@ -2,6 +2,8 @@
 #define FONT8x16_IMPLEMENTATION
 #include "font.h"
 
+Renderer::Renderer() {}
+
 Renderer::Renderer(struct limine_framebuffer* framebuffer_) {
 	framebuffer = framebuffer_;
 	color = 0xFFFFFFFF;

@@ -10,6 +10,8 @@ class Renderer {
 		uint32_t cursor_x;
 		uint32_t cursor_y;
 
+		Renderer();
+
 		Renderer(struct limine_framebuffer* target_framebuffer);
 
 		void put_pixel(uint32_t x, uint32_t y, uint32_t color);
@@ -24,3 +26,5 @@ class Renderer {
 
 		void printf(const char* format, ...);
 };
+
+extern Renderer terminal;
