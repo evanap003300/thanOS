@@ -2,6 +2,7 @@
 #include "limine.h"
 #include <stddef.h>
 #include "render.h"
+#include "idt.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -34,11 +35,14 @@ extern "C" void kmain(void) {
 
 	Renderer terminal(framebuffer);
 	terminal.clear();
-	terminal.print("System Initialized...\n");
+	terminal.printf("System Initialized...\n");
 	terminal.printf("Welcome to thanOS v%d.%d\n", 1, 0);
 	terminal.printf("Kernel Address: %x\n", &kmain);
 	terminal.printf("Status: %s\n", "Online");
 	terminal.print("---------------------------------\n");
+	terminal.printf("Init IDT... \n");
+	IDT::init();
+	terminal.printf("IDT Loaded!\n");
 
 	hcf();
 }
