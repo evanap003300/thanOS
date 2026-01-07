@@ -1,9 +1,0 @@
-Bootloader: Limine
-Langauge for kernel: C++
-
-Resources:
-Poncho - "OSDev Season 2" (Limine + C++) 
-Andres Kling - "SerenityOS" (C++, Writes his own standard lib)
-OSDev Wiki 
-Operating systems Three Easy Pieces (OSTEP)
-
