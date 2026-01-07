@@ -23,6 +23,9 @@ all: $(ISO)
 src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+src/%.o: src/%.asm
+	$(AS) -f elf64 $< -o $@
+
 $(KERNEL): $(OBJS) 
 	$(LD) -T linker.ld -o $@ $(OBJS) -z max-page-size=0x1000
 
@@ -54,5 +57,3 @@ run: $(ISO)
 clean:
 	rm -f $(OBJS) $(KERNEL) $(ISO)
 
-src/%.o: src/%.asm
-	$(AS) -f elf64 $< -o $@

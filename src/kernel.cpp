@@ -58,7 +58,7 @@ extern "C" void kmain(void) {
 	terminal.printf("Testing Interrupts...\n");
 	
 	volatile int a = 5;
-	volatile int b = 0;
+	//volatile int b = 0;
 	int c = a / 1; // change to b for testing error handling
 
 	terminal.printf("Value of c: %d\n", c);
