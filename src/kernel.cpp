@@ -59,9 +59,9 @@ extern "C" void kmain(void) {
 	
 	volatile int a = 5;
 	volatile int b = 0;
-	int c = a / b;
+	int c = a / 1; // change to b for testing error handling
 
-	terminal.printf("Ts shouldn't happen :(%d\n", c);
+	terminal.printf("Value of c: %d\n", c);
 
 	hcf();
 }
