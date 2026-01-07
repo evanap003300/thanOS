@@ -1,4 +1,4 @@
-#include <int.h>
+#include "idt.h"
 
 IDTEntry IDT::idt[256];
 IDTR IDT::idtr;

@@ -1,5 +1,5 @@
 #pragma once 
-#include <stdint>
+#include <stdint.h>
 
 struct __attribute__((packed)) IDTEntry {
 	uint16_t offset_low;
@@ -14,7 +14,7 @@ struct __attribute__((packed)) IDTEntry {
 struct __attribute__((packed)) IDTR {
 	uint16_t limit;
 	uint64_t base;
-}
+};
 
 class IDT {
 	public: 
@@ -23,5 +23,5 @@ class IDT {
 		
 		static void set_gate(uint8_t vector, void* istr, uint8_t flags);
 
-		static viod init();
+		static void init();
 };
