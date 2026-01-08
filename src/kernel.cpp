@@ -20,6 +20,7 @@ static void hcf(void) {
 	}
 }
 
+// Init global renderer object
 Renderer terminal;
 
 // Kernel entry point

@@ -11,7 +11,6 @@ Renderer::Renderer(struct limine_framebuffer* framebuffer_) {
 	cursor_y = 0;	
 }
 
-
 void Renderer::put_pixel(uint32_t x, uint32_t y, uint32_t color) {
 	if (x >= framebuffer->width || y >= framebuffer->height) return;
 	
@@ -42,7 +41,7 @@ void Renderer::draw_char(char c) {
 		}
 	}
 
-	cursor_x += 8;
+	cursor_x += WIDTH;
 
 	if (cursor_x >= framebuffer->width) {
 		next_line();

@@ -5,10 +5,10 @@ ENTRY(kmain)
 
 PHDRS
 {
-	limine_requests PT_LOAD      FLAGS(6);
-	text    	PT_LOAD      FLAGS(5); 
-	rodata  	PT_LOAD      FLAGS(4);
-	data    	PT_LOAD      FLAGS(6);
+	limine_requests    PT_LOAD      FLAGS(6);
+	text    	   PT_LOAD      FLAGS(5); 
+	rodata  	   PT_LOAD      FLAGS(4);
+	data    	   PT_LOAD      FLAGS(6);
 }
 
 SECTIONS
