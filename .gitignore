@@ -7,3 +7,5 @@ src/gdt_asm.o
 src/idt.o
 src/idt_asm.o
 src/interrupts.o
+src/io.o
+src/pic.o
