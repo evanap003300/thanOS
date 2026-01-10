@@ -15,18 +15,19 @@ load_idt:
 
 %macro ISR_NO_ERROR_CODE 1
 	isr%1:
-		push 0
-		push %1
-		jmp isr_common_stub
+		push 0                        ; push dummy error code
+		push %1                       ; push the interrupt number
+		jmp isr_common_stub           ; go to the shared code
 %endmacro
 
 %macro ISR_ERROR_CODE 1
 	isr%1:
-		push %1
-		jmp isr_common_stub
+		push %1                       ; push the interrupt number
+		jmp isr_common_stub           ; go to shared code
 %endmacro
 
 isr_common_stub:
+	; save current state by pushing all registers, CPU alr pushes some
 	push rax
 	push rbx
 	push rcx
@@ -43,9 +44,11 @@ isr_common_stub:
     	push r14
     	push r15
 
+	; pass pointer to top of stack (rsp) and call C++ code
 	mov rdi, rsp
 	call isr_handler
 
+	; restore the state of all the registers 
 	pop r15
     	pop r14
     	pop r13
@@ -62,7 +65,10 @@ isr_common_stub:
     	pop rbx
     	pop rax
 
+	; pop the stack twice: remove 16 bytes of int. number, error code
 	add rsp, 16
+
+	; return and pop off thre rest of the registers the CPU pushed
 	iretq 
 
 ISR_NO_ERROR_CODE  0    ; Divide by Zero
