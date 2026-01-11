@@ -4,6 +4,7 @@
 #include "render.h"
 #include "idt.h"
 #include "gdt.h"
+#include "pic.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -64,5 +65,19 @@ extern "C" void kmain(void) {
 
 	terminal.printf("Value of c: %d\n", c);
 
-	hcf();
+	// Trying out keyboard driver:
+	pic_remap();
+	pic_unmask(0);
+	pic_unmask(1);
+
+	terminal.printf("Enabling Interrupts...\n");
+	__asm__ volatile ("sti");
+
+	//hcf();
+	
+	terminal.printf("OS Online. Press 'A' to test!\n");
+
+	while (true) {
+		__asm__ volatile ("hlt");
+	}
 }

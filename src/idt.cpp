@@ -36,6 +36,8 @@ extern "C" void isr28();
 extern "C" void isr29();
 extern "C" void isr30();
 extern "C" void isr31();
+extern "C" void isr32();
+extern "C" void isr33();
 
 void IDT::set_gate(uint8_t vector, void* isr, uint8_t flags) {
 	uint64_t addr = (uint64_t)isr;
@@ -87,6 +89,8 @@ void IDT::init() {
     	set_gate(29, (void*)isr29, 0x8E);
     	set_gate(30, (void*)isr30, 0x8E);
     	set_gate(31, (void*)isr31, 0x8E);
+	set_gate(32, (void*)isr32, 0x8E);
+	set_gate(33, (void*)isr33, 0x8E);
 
 	load_idt((uint64_t)&idtr);
 }
