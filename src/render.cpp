@@ -2,6 +2,10 @@
 #define FONT8x16_IMPLEMENTATION
 #include "font.h"
 
+static inline void flush_framebuffer() {
+	__asm__ volatile ("mfence" ::: "memory");
+}
+
 Renderer::Renderer() {}
 
 Renderer::Renderer(struct limine_framebuffer* framebuffer_) {
@@ -14,14 +18,14 @@ Renderer::Renderer(struct limine_framebuffer* framebuffer_) {
 void Renderer::put_pixel(uint32_t x, uint32_t y, uint32_t color) {
 	if (x >= framebuffer->width || y >= framebuffer->height) return;
 	
-	uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
+	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
 	fb_ptr[x + (y * framebuffer->width)] = color;	
 }
 
 void Renderer::draw_char(char c) {
 	if (!framebuffer) return;
 
-	uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
+	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
 	uint64_t stride = framebuffer->width;
 
 	uint16_t HEIGHT = 16;
@@ -41,6 +45,8 @@ void Renderer::draw_char(char c) {
 		}
 	}
 
+	flush_framebuffer();
+
 	cursor_x += WIDTH;
 
 	if (cursor_x >= framebuffer->width) {
@@ -49,7 +55,7 @@ void Renderer::draw_char(char c) {
 }
 
 void Renderer::clear() {
-	uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
+	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
     	uint64_t width = framebuffer->width;
     	uint64_t height = framebuffer->height;
 
@@ -81,7 +87,7 @@ void Renderer::print(const char* str) {
 }
 
 void Renderer::scroll() {
-	uint32_t* fb_ptr = (uint32_t*)framebuffer->address; 
+	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address; 
 	uint32_t bg_color = 0xFF0E0E0E;
 	uint32_t color = bg_color;
 

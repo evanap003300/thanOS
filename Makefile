@@ -52,7 +52,7 @@ $(ISO): $(KERNEL) limine.conf
 	rm -rf iso_root
 
 run: $(ISO)
-	qemu-system-x86_64 -cdrom $(ISO) -m 512M
+	qemu-system-x86_64 -cdrom $(ISO) -m 512M -display sdl
 
 clean:
 	rm -f $(OBJS) $(KERNEL) $(ISO)
