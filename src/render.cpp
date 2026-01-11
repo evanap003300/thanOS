@@ -109,6 +109,25 @@ void Renderer::scroll() {
 	cursor_y -= 16;
 }
 
+void Renderer::backspace() {
+	if (cursor_x == 0) {
+		return;
+	}	
+	
+	cursor_x -= 8;
+	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
+
+	for (int i = 0; i < 16; i++) {
+		for (int j = 0; j < 8; j++) {
+			uint64_t index = (cursor_x + j) + (cursor_y + i) * (framebuffer->width);
+			fb_ptr[index] = 0xFF0E0E0E;
+		}
+	}
+
+	flush_framebuffer();
+
+}
+
 void Renderer::print_number(int number) {
 	if (number == 0) {
 		draw_char('0');

@@ -20,6 +20,7 @@ class Renderer {
 		void next_line();
 		void print(const char* str);
 		void scroll();
+		void backspace();
 
 		void print_number(int number);
 		void print_hex(uint32_t number);

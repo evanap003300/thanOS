@@ -47,7 +47,13 @@ extern "C" void keyboard_handler_main() {
 	} else {
 		if (scancode < 128 && keymap[scancode] != 0) {
 			char letter = keymap[scancode];
-			terminal.draw_char(letter);
+			if (scancode == 0x1C) {
+				terminal.next_line();
+			} else if (scancode == 0x0E) {
+				terminal.backspace();	
+			} else {
+				terminal.draw_char(letter);
+			}
 		}
 	}
 
