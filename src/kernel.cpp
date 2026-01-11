@@ -77,6 +77,8 @@ extern "C" void kmain(void) {
 	
 	terminal.printf("OS Online. Press 'A' to test!\n");
 
+	terminal.draw_cursor(true);
+
 	while (true) {
 		__asm__ volatile ("hlt");
 	}

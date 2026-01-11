@@ -128,6 +128,23 @@ void Renderer::backspace() {
 
 }
 
+void Renderer::draw_cursor(bool on) {
+	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
+	uint32_t color = on ? 0xFFFFFFFF : 0xFF0E0E0E;
+
+	for (int i = 14; i < 16; i++) {
+		for (int j = 0; j < 8; j++) {
+			uint64_t index = (cursor_x + j) + (cursor_y + i) * (framebuffer->width);
+			
+			if (index < (framebuffer->width * framebuffer->height)) {
+				fb_ptr[index] = color;
+			}
+		}	
+	}
+
+	flush_framebuffer();
+}
+
 void Renderer::print_number(int number) {
 	if (number == 0) {
 		draw_char('0');

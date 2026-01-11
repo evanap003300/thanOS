@@ -43,19 +43,24 @@ extern "C" void keyboard_handler_main() {
 	uint8_t scancode = inb(0x60);
 
 	if (scancode & 0x80) {
-		// Key Release
-	} else {
-		if (scancode < 128 && keymap[scancode] != 0) {
-			char letter = keymap[scancode];
-			if (scancode == 0x1C) {
-				terminal.next_line();
-			} else if (scancode == 0x0E) {
-				terminal.backspace();	
-			} else {
-				terminal.draw_char(letter);
-			}
+		pic_send_eoi(1);
+		return;
+	}
+
+	terminal.draw_cursor(false);
+
+	if (scancode < 128 && keymap[scancode] != 0) {
+		char letter = keymap[scancode];
+		if (scancode == 0x1C) {
+			terminal.next_line();
+		} else if (scancode == 0x0E) {
+			terminal.backspace();	
+		} else {
+			terminal.draw_char(letter);
 		}
 	}
+
+	terminal.draw_cursor(true);
 
 	pic_send_eoi(1);
 }

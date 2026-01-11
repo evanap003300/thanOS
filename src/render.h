@@ -21,6 +21,7 @@ class Renderer {
 		void print(const char* str);
 		void scroll();
 		void backspace();
+		void draw_cursor(bool on);
 
 		void print_number(int number);
 		void print_hex(uint32_t number);
