@@ -3,6 +3,8 @@
 #include "pic.h"
 #include "io.h"
 
+extern "C" void keyboard_handler_main();
+
 extern "C" void isr_handler(registers* regs) {
 	uint64_t int_num = regs->interrupt_number;
 	
@@ -35,9 +37,7 @@ extern "C" void isr_handler(registers* regs) {
 		pic_send_eoi(0);
 		return;
 	} else if (int_num == 33) {
-		uint8_t scancode = inb(0x60);
-		terminal.printf("Key: %x ", scancode);
-		pic_send_eoi(1);
+		keyboard_handler_main();
 		return;
 	} else {
 		terminal.printf("Unknown Interrupt: %d\n", int_num);
