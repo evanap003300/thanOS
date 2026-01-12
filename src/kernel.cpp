@@ -5,6 +5,7 @@
 #include "idt.h"
 #include "gdt.h"
 #include "pic.h"
+#include "shell.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -78,6 +79,11 @@ extern "C" void kmain(void) {
 	terminal.printf("OS Online. Press 'A' to test!\n");
 
 	terminal.draw_cursor(true);
+
+	terminal.clear();
+
+	terminal.printf("System Initalized.\n");
+	shell.init();
 
 	while (true) {
 		__asm__ volatile ("hlt");

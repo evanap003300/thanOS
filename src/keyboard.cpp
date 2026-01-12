@@ -1,6 +1,7 @@
 #include "io.h"
 #include "pic.h"
 #include "render.h"
+#include "shell.h"
 
 // The Translation Table: Scancode -> ASCII
 // This maps the first 58 keys (0-9, A-Z, some symbols)
@@ -52,14 +53,7 @@ extern "C" void keyboard_handler_main() {
 	terminal.draw_cursor(false);
 
 	if (scancode < 128 && keymap[scancode] != 0) {
-		char letter = keymap[scancode];
-		if (scancode == 0x1C) {
-			terminal.next_line();
-		} else if (scancode == 0x0E) {
-			terminal.backspace();	
-		} else {
-			terminal.draw_char(letter);
-		}
+		shell.on_key_pressed(keymap[scancode]);
 	}
 
 	terminal.draw_cursor(true);
