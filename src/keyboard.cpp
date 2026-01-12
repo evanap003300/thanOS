@@ -39,6 +39,8 @@ const char keymap[128] = {
     0, /* All other keys are undefined */
 };
 
+extern uint64_t timer_ticks;
+
 extern "C" void keyboard_handler_main() {
 	uint8_t scancode = inb(0x60);
 
@@ -61,6 +63,7 @@ extern "C" void keyboard_handler_main() {
 	}
 
 	terminal.draw_cursor(true);
+	timer_ticks = 0;
 
 	pic_send_eoi(1);
 }

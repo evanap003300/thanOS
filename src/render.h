@@ -9,6 +9,7 @@ class Renderer {
 		uint32_t color;
 		uint32_t cursor_x;
 		uint32_t cursor_y;
+		bool cursor_visable;
 
 		Renderer();
 
@@ -22,6 +23,7 @@ class Renderer {
 		void scroll();
 		void backspace();
 		void draw_cursor(bool on);
+		void toggle_cursor();
 
 		void print_number(int number);
 		void print_hex(uint32_t number);

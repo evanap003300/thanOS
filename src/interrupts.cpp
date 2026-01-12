@@ -5,6 +5,8 @@
 
 extern "C" void keyboard_handler_main();
 
+uint64_t timer_ticks = 0;
+
 extern "C" void isr_handler(registers* regs) {
 	uint64_t int_num = regs->interrupt_number;
 	
@@ -34,6 +36,12 @@ extern "C" void isr_handler(registers* regs) {
 			asm ("hlt");
 		}
 	} else if (int_num == 32) { 
+		timer_ticks++;
+
+		if (timer_ticks % 9 == 0) {
+			terminal.toggle_cursor();
+		}
+
 		pic_send_eoi(0);
 		return;
 	} else if (int_num == 33) {

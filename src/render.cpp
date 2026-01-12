@@ -12,7 +12,8 @@ Renderer::Renderer(struct limine_framebuffer* framebuffer_) {
 	framebuffer = framebuffer_;
 	color = 0xFFFFFFFF;
 	cursor_x = 0;
-	cursor_y = 0;	
+	cursor_y = 0;
+	cursor_visable = true;	
 }
 
 void Renderer::put_pixel(uint32_t x, uint32_t y, uint32_t color) {
@@ -143,6 +144,12 @@ void Renderer::draw_cursor(bool on) {
 	}
 
 	flush_framebuffer();
+}
+
+void Renderer::toggle_cursor() {
+	cursor_visable = !cursor_visable;
+	
+	draw_cursor(cursor_visable);
 }
 
 void Renderer::print_number(int number) {
