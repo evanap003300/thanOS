@@ -1,5 +1,8 @@
-KERNEL := kernel.elf 
-ISO := thanOS.iso
+SRC_DIR := src
+BUILD_DIR := build
+
+KERNEL := $(BUILD_DIR)/kernel.elf 
+ISO := $(BUILD_DIR)/thanOS.iso
 
 CXX := x86_64-elf-g++
 LD := x86_64-elf-ld
@@ -11,8 +14,8 @@ CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine 
 CPP_SRCS := $(wildcard src/*.cpp)
 ASM_SRCS := $(wildcard src/*.asm)
 
-CPP_OBJS := $(CPP_SRCS:.cpp=.o)
-ASM_OBJS := $(ASM_SRCS:.asm=.o)
+CPP_OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(CPP_SRCS))
+ASM_OBJS := $(patsubst $(SRC_DIR)/%.asm, $(BUILD_DIR)/%.o, $(ASM_SRCS))
 
 OBJS := $(CPP_OBJS) $(ASM_OBJS)
 
@@ -20,10 +23,12 @@ OBJS := $(CPP_OBJS) $(ASM_OBJS)
 
 all: $(ISO) 
 
-src/%.o: src/%.cpp
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-src/%.o: src/%.asm
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm
+	@mkdir -p $(dir $@)
 	$(AS) -f elf64 $< -o $@
 
 $(KERNEL): $(OBJS) 
@@ -55,5 +60,5 @@ run: $(ISO)
 	qemu-system-x86_64 -cdrom $(ISO) -m 512M -display sdl
 
 clean:
-	rm -f $(OBJS) $(KERNEL) $(ISO)
+	rm -rf $(BUILD_DIR) 
 

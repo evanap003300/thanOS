@@ -1,4 +1,1 @@
-src/*.o
-*.elf
-*.iso
-
+build/
