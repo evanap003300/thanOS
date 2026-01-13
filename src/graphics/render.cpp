@@ -1,6 +1,6 @@
-#include "render.h"
+#include "graphics/render.h"
 #define FONT8x16_IMPLEMENTATION
-#include "font.h"
+#include "graphics/font.h"
 
 static inline void flush_framebuffer() {
 	__asm__ volatile ("mfence" ::: "memory");

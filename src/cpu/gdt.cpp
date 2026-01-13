@@ -1,4 +1,4 @@
-#include "gdt.h"
+#include "cpu/gdt.h"
 
 extern "C" void load_gdt(uint64_t gdt_descriptor_address);
 

@@ -1,5 +1,5 @@
-#include "pic.h"
-#include "io.h"
+#include "drivers/pic.h"
+#include "utils/io.h"
 
 void pic_mask(uint8_t irq_line) {
 	uint16_t port;

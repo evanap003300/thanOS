@@ -9,10 +9,10 @@ LD := x86_64-elf-ld
 
 AS := nasm
 
-CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine -mcmodel=kernel -mno-red-zone -mgeneral-regs-only
+CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine -mcmodel=kernel -mno-red-zone -mgeneral-regs-only -I$(SRC_DIR)
 
-CPP_SRCS := $(wildcard src/*.cpp)
-ASM_SRCS := $(wildcard src/*.asm)
+CPP_SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
+ASM_SRCS := $(shell find $(SRC_DIR) -name '*.asm')
 
 CPP_OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(CPP_SRCS))
 ASM_OBJS := $(patsubst $(SRC_DIR)/%.asm, $(BUILD_DIR)/%.o, $(ASM_SRCS))

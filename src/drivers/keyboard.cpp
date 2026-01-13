@@ -1,7 +1,7 @@
-#include "io.h"
-#include "pic.h"
-#include "render.h"
-#include "shell.h"
+#include "utils/io.h"
+#include "drivers/pic.h"
+#include "graphics/render.h"
+#include "shell/shell.h"
 
 // The Translation Table: Scancode -> ASCII
 // This maps the first 58 keys (0-9, A-Z, some symbols)

@@ -1,4 +1,4 @@
-#include "idt.h"
+#include "cpu/idt.h"
 
 IDTEntry IDT::idt[256];
 IDTR IDT::idtr;

@@ -1,7 +1,7 @@
-#include "interrupts.h"
-#include "render.h"
-#include "pic.h"
-#include "io.h"
+#include "cpu/interrupts.h"
+#include "graphics/render.h"
+#include "drivers/pic.h"
+#include "utils/io.h"
 
 extern "C" void keyboard_handler_main();
 

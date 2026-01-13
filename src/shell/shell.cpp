@@ -1,5 +1,5 @@
-#include "shell.h"
-#include "render.h"
+#include "shell/shell.h"
+#include "graphics/render.h"
 
 Shell shell;
 

@@ -1,11 +1,11 @@
 #include <stdint.h>
 #include "limine.h"
 #include <stddef.h>
-#include "render.h"
-#include "idt.h"
-#include "gdt.h"
-#include "pic.h"
-#include "shell.h"
+#include "graphics/render.h"
+#include "cpu/idt.h"
+#include "cpu/gdt.h"
+#include "drivers/pic.h"
+#include "shell/shell.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
