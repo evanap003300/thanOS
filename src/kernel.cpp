@@ -6,6 +6,7 @@
 #include "cpu/gdt.h"
 #include "drivers/pic.h"
 #include "shell/shell.h"
+#include "cpu/pmm.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -74,13 +75,28 @@ extern "C" void kmain(void) {
 	terminal.printf("Enabling Interrupts...\n");
 	__asm__ volatile ("sti");
 
-	//hcf();
-	
 	terminal.printf("OS Online. Press 'A' to test!\n");
 
 	terminal.draw_cursor(true);
 
-	terminal.clear();
+	//terminal.clear();
+
+	pmm.init();
+
+	// TEST: Ask for a page of RAM
+    	void* new_page = pmm.alloc_page();
+    	terminal.printf("Allocated Page at: %x\n", new_page);
+
+    	void* second_page = pmm.alloc_page();
+    	terminal.printf("Allocated Page at: %x\n", second_page);
+
+    	// TEST: Free it
+    	pmm.free_page(new_page);
+    	terminal.printf("Freed first page.\n");
+
+    	// TEST: Ask again (Should get the same address back!)
+    	void* third_page = pmm.alloc_page();
+    	terminal.printf("Re-allocated Page at: %x\n", third_page);
 
 	terminal.printf("System Initalized.\n");
 	shell.init();
