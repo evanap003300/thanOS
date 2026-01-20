@@ -6,3 +6,11 @@
 
 - Later: Create map for user programs for context switching and usrland
  
+## To Do's:
+- [] Create Page Table
+- [] Tree Walker Impl.
+- [] Mapping & Unmapping pages
+
+## Files to update/create: 
+- [] cpu/vmm.h
+- [] cpu/vmm.cpp
