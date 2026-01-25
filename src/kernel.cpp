@@ -10,6 +10,7 @@
 #include "cpu/vmm.h"
 #include "memory/heap.h"
 #include "std/string.h"
+#include "std/vector.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
