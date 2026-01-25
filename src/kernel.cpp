@@ -73,26 +73,10 @@ extern "C" void kmain(void) {
 	terminal.printf("VMM: kmain Virtual Address: %x\n", &kmain);
 	terminal.printf("VMM: kmain Physical Address: %x\n", kmain_phys);
 
-	// testing heap
 	void* heapStart = (void*)0x100000000;
-	InitializeHeap(heapStart, 100);
-
-	int* a = new int;
-	*a = 5;
-	terminal.printf("Dynamic Int: %d at %x\n", *a, a);
-
-	char* str = new char[10];
-	str[0] = 'H';
-	str[1] = 'i';
-	str[2] = '\0';
-	
-	terminal.printf("Dynamic String: %s at %x\n", str, str);
-
-	
-	delete a;
-	delete[] str;
-
-	terminal.printf("Freed Memory.\n");
+	uint64_t page_count = 100;
+	InitializeHeap(heapStart, page_count);
+	terminal.printf("[OK] Heap Initalized\n");
 
 	terminal.printf("System Initalized.\n");
 	shell.init();
