@@ -139,3 +139,11 @@ void operator delete(void* p) {
 void operator delete[](void* p) {
 	free(p);
 }
+
+void operator delete(void* p, size_t size) {
+	free(p);
+}
+
+void operator delete[](void* p, size_t size) {
+	free(p);
+}
