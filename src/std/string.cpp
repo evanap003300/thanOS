@@ -1,5 +1,5 @@
 #include "std/string.h"
-#include "memeory/heap.h"
+#include "memory/heap.h"
 
 size_t strlen(const char* str) {
 	size_t len = 0;
@@ -25,7 +25,7 @@ String::String(const char* string) {
 		this->buffer[i] = string[i];
 	}
 
-	this->buffer[this->_length] = '\0'.
+	this->buffer[this->_length] = '\0';
 }
 
 String::String(const String& other) {
@@ -69,7 +69,7 @@ size_t String::length() const {
 	return this->_length;
 }
 
-const char* String:c_str() const {
+const char* String::c_str() const {
 	return this->buffer;
 }
 

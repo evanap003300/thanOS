@@ -9,6 +9,7 @@
 #include "cpu/pmm.h"
 #include "cpu/vmm.h"
 #include "memory/heap.h"
+#include "std/string.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -78,7 +79,9 @@ extern "C" void kmain(void) {
 	InitializeHeap(heapStart, page_count);
 	terminal.printf("[OK] Heap Initalized\n");
 
-	terminal.printf("System Initalized.\n");
+	String sysInit = "System Initalized.\n";
+	terminal.printf("%s", sysInit.c_str());
+
 	shell.init();
 
 	while (true) {
