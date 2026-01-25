@@ -88,6 +88,7 @@ extern "C" void kmain(void) {
 	
 	terminal.printf("Dynamic String: %s at %x\n", str, str);
 
+	
 	delete a;
 	delete[] str;
 

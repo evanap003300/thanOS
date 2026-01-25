@@ -67,10 +67,6 @@ void* malloc(size_t size) {
 }
 
 MemorySegmentHeader* MemorySegmentHeader::Split(size_t splitLength) {
-	if (splitLength < 0x10) {
-		return NULL;
-	}
-
 	int64_t splitSegmentLength = length - splitLength - sizeof(MemorySegmentHeader);
 
 	if (splitSegmentLength < 0) {
@@ -140,10 +136,10 @@ void operator delete[](void* p) {
 	free(p);
 }
 
-void operator delete(void* p, size_t size) {
+void operator delete(void* p, size_t) {
 	free(p);
 }
 
-void operator delete[](void* p, size_t size) {
+void operator delete[](void* p, size_t) {
 	free(p);
 }
