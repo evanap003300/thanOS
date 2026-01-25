@@ -12,7 +12,7 @@ struct MemorySegmentHeader {
 	void CombineBackward();
 
 	MemorySegmentHeader* Split(size_t splitLength);
-}
+};
 
 void InitializeHeap(void* heapAddress, size_t pageCount);
 void* malloc(size_t size);

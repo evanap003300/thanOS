@@ -18,7 +18,7 @@ void InitializeHeap(void* heapAddress, size_t pageCount) {
 	
 	MemorySegmentHeader* firstSegment = (MemorySegmentHeader*)heapAddress;
 
-	size_t total_size = pageCount * 0x1000;
+	size_t totalSize = pageCount * 0x1000;
 
 	firstSegment->length = totalSize - sizeof(MemorySegmentHeader);
 	firstSegment->next = NULL;
@@ -89,9 +89,39 @@ MemorySegmentHeader* MemorySegmentHeader::Split(size_t splitLength) {
 	}
 
 	this->next = newSplitHeader;
-	this->lenght = splitLength;
+	this->length = splitLength;
 
 	return newSplitHeader;
+}
+
+void MemorySegmentHeader::CombineForward() { 
+	if (this->next == NULL) {
+		return;
+	}
+
+	if (!this->next->free) {
+		return;
+	}
+
+	this->length = this->length + this->next->length + sizeof(MemorySegmentHeader);
+	this->next = this->next->next;
+
+	if (this->next != NULL) {
+		this->next->last = this;
+	}
+}
+
+void MemorySegmentHeader::CombineBackward() {
+	if (this->last != NULL && this->last->free) {
+		this->last->CombineForward();
+	}
+}
+
+void free(void* address) {
+	MemorySegmentHeader* segment = (MemorySegmentHeader*)((size_t)address - sizeof(MemorySegmentHeader));
+	segment->free = true;
+	segment->CombineForward();
+	segment->CombineBackward();
 }
 
 void* operator new(size_t size) {
