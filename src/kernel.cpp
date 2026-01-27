@@ -89,19 +89,12 @@ extern "C" void kmain(void) {
 	InitializeHeap(heapStart, page_count);
 	terminal.printf("[OK] Heap Initalized\n");
 
-	terminal.printf("File system check:\n");
-
-	if (module_request.response == NULL || module_request.response->module_count == 0) {
-		terminal.printf("No modules found!\n");
-	} else {
-		struct limine_file* module = module_request.response->modules[0];
+	struct limine_file* module = module_request.response->modules[0];
 		
-		terminal.printf("Module Loaded Successfully!\n");	
-		terminal.printf("Address: %x\n", module->address);
-		terminal.printf("Size:    %d bytes\n", module->size);
-		terminal.printf("Path:    %s\n", module->path);
-	}	
-
+	terminal.printf("[OK] Module Loaded\n");	
+	terminal.printf("FS: Address: %x\n", module->address);
+	terminal.printf("FS: Size:    %d bytes\n", module->size);
+	terminal.printf("FS: Path:    %s\n", module->path);	
 
 
 	String sysInit = "System Initalized.\n";
