@@ -39,15 +39,14 @@ $(ISO): $(KERNEL) limine.conf
 	mkdir -p iso_root/EFI/BOOT
 
 	cp $(KERNEL) iso_root/
-
 	cp limine.conf iso_root/
 	cp limine.conf iso_root/limine/ 
 
 	cp Limine/limine-bios.sys Limine/limine-bios-cd.bin Limine/limine-uefi-cd.bin iso_root/limine/
 	cp Limine/BOOTX64.EFI iso_root/EFI/BOOT/
 
-	tar -cf initrd.tar -C src/initrd .
-	cp initrd.tar iso_root/
+	tar -cf $(BUILD_DIR)/initrd.tar -C src/initrd .
+	cp $(BUILD_DIR)/initrd.tar iso_root/
 
 	xorriso -as mkisofs -b limine/limine-bios-cd.bin \
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
