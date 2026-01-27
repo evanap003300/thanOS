@@ -19,6 +19,12 @@ volatile struct limine_framebuffer_request framebuffer_request = {
 	.response = NULL  
 };
 
+__attribute__((used, section(".limine_requests")))
+volatile struct limine_module_request module_request = {
+	.id = LIMINE_MODULE_REQUEST_ID,
+	.revision = 0
+};
+
 // Halt and catch fire
 static void hcf(void) {
 	asm ("cli");
@@ -79,6 +85,21 @@ extern "C" void kmain(void) {
 	uint64_t page_count = 100;
 	InitializeHeap(heapStart, page_count);
 	terminal.printf("[OK] Heap Initalized\n");
+
+	terminal.printf("File system check:\n");
+
+	if (module_request.response == NULL || module_request.response->module_count == 0) {
+		terminal.printf("No modules found!\n");
+	} else {
+		struct limine_file* module = module_request.response->modules[0];
+		
+		terminal.printf("Module Loaded Successfully!\n");	
+		terminal.printf("Address: %x\n", module->address);
+		terminal.printf("Size:    %d bytes\n", module->size);
+		terminal.printf("Path:    %s\n", module->path);
+	}	
+
+
 
 	String sysInit = "System Initalized.\n";
 	terminal.printf("%s", sysInit.c_str());
