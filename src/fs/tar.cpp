@@ -16,7 +16,7 @@ size_t octal_to_int(const char* str) {
 
 namespace Tar {
 	void parse(uint64_t address) {
-		terminal.printf("[Tar Parser Started]\n");
+		terminal.printf("FS: [Tar Parser Started]\n");
 
 		while (true) {
 			TarHeader* header = (TarHeader*)address;
@@ -30,16 +30,18 @@ namespace Tar {
 			char* content = (char*)(address + 512);
 		
 			if (header->typeflag == '5') {
-				terminal.printf("DIR: %s\n", header->name);
+				terminal.printf("TAR: DIR: %s\n", header->name);
 				address += 512;
 				continue;
 			}
 
 			if (size > 0 && header->typeflag == '0') {
-				terminal.printf("Content:\n");
-				terminal.printf("File: %s | Size: %d bytes\n", header->name, size);
+				terminal.printf("TAR: File: %s | Size: %d bytes\n", header->name, size);
+				terminal.printf("TAR: %s: ", header->name);
 				for (size_t i = 0; i < size && i < 30; i++) {
-					terminal.printf("%c", content[i]);
+					if (content[i] != '\n') {
+						terminal.printf("%c", content[i]);
+					}
 				}
 				terminal.printf("\n");
 			}
@@ -49,6 +51,6 @@ namespace Tar {
 			address += 512 + (size_in_blocks * 512);
 		}
 
-		terminal.printf("[Tar Parser Finished]\n");
+		terminal.printf("FS: [Tar Parser Finished]\n");
 	}
 }
