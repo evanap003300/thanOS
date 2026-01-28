@@ -23,5 +23,5 @@ struct TarHeader {
 };
 
 namespace Tar {
-	void parse(uint64_t address)_;
+	void parse(uint64_t address);
 }

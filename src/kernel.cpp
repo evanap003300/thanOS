@@ -11,6 +11,7 @@
 #include "memory/heap.h"
 #include "std/string.h"
 #include "std/vector.h"
+#include "fs/tar.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -96,6 +97,7 @@ extern "C" void kmain(void) {
 	terminal.printf("FS: Size:    %d bytes\n", module->size);
 	terminal.printf("FS: Path:    %s\n", module->path);	
 
+	Tar::parse((uint64_t)module->address);
 
 	String sysInit = "System Initalized.\n";
 	terminal.printf("%s", sysInit.c_str());
