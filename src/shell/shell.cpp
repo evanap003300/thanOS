@@ -1,8 +1,11 @@
 #include "shell/shell.h"
 #include "graphics/render.h"
 #include "std/string.h"
+#include "fs/vfs.h"
 
 Shell shell;
+
+extern Vector<File> file_system;
 
 void Shell::init() {
 	buffer_index = 0;
@@ -26,6 +29,33 @@ void Shell::execute() {
 		terminal.printf("ap_ev\n");
 	} else if (String(buffer) == "clear") {
 		terminal.clear();
+	} else if (String(buffer) == "load") {
+		File* config = nullptr;
+
+		for (size_t i = 0; i < file_system.size(); i++) {
+			if (file_system[i].name == "./theme.cfg") {
+		       		config = &file_system[i];
+				break;
+			}
+		}
+
+		if (config == nullptr) {
+			terminal.printf("Error: theme.cfg not found.\n");
+		} else {
+			char* content = (char*)config->data;
+
+			if (strncmp(content, "CYAN", 4) == 0) {
+				terminal.setColor(0x00FFFF);
+				terminal.printf("Theme set to CYAN.\n");	
+			} else if (strncmp(content, "GREEN", 5) == 0) {
+				terminal.setColor(0xFF0000);
+				terminal.printf("Theme set to RED.\n");
+			} else {
+				terminal.printf("Unknown theme: %s\n", content);
+			}
+		}
+			       
+
 	} else {
 		terminal.printf("Unknown command.\n");
 	}

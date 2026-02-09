@@ -265,4 +265,6 @@ void Renderer::printf(const char* format, ...) {
 	va_end(args);
 }
 
-
+void Renderer::setColor(uint32_t new_color) {
+	this->color = new_color;
+}

@@ -19,9 +19,12 @@ public:
 
 	size_t length() const;
 	const char* c_str() const; 
+	int strncmp(const char* s1, const char* s2, size_t n);
 
 	String operator+(const String& rhs);
 	bool operator==(const String& other) const;
 	bool operator==(const char* other) const;
 };
 
+int strncmp(const char* s1, const char* s2, size_t n);
+size_t strlen(const char* str);

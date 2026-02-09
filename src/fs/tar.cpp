@@ -1,5 +1,6 @@
 #include "fs/tar.h"
 #include "graphics/render.h"
+#include "fs/vfs.h"
 
 size_t octal_to_int(const char* str) {
 	size_t size = 0;
@@ -44,6 +45,19 @@ namespace Tar {
 					}
 				}
 				terminal.printf("\n");
+
+			}
+
+			// Add file to file system
+                        File f;
+                        f.name = header->name;
+                        f.size = size;
+                        f.data = (uint8_t*)content;
+			f.is_directory = (header->typeflag == '5');
+
+			if (!f.is_directory) {
+				file_system.push_back(f);
+				terminal.printf("[FS] Loaded file: %s\n", f.name.c_str());
 			}
 
 			size_t size_in_blocks = (size + 511) / 512;

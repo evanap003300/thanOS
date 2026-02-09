@@ -12,6 +12,8 @@
 #include "std/string.h"
 #include "std/vector.h"
 #include "fs/tar.h"
+#include "fs/vfs.h"
+#include "utils/io.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -39,6 +41,9 @@ static void hcf(void) {
 
 // Init global renderer object
 Renderer terminal;
+
+// Init global file system
+Vector<File> file_system;
 
 // Kernel entry point
 extern "C" void kmain(void) {

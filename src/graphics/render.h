@@ -29,6 +29,7 @@ class Renderer {
 		void print_hex(uint32_t number);
 
 		void printf(const char* format, ...);
+		void setColor(uint32_t new_color);
 };
 
 extern Renderer terminal;

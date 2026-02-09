@@ -1,5 +1,12 @@
 #include "utils/io.h"
 
+extern "C" {
+	void* __dso_handle = 0;
+	void __cxa_atexit(void (*)(void *), void *, void *) {
+	
+	}
+}
+
 void outb(uint16_t port, uint8_t value) {
 	__asm__ volatile("outb %0, %1" : : "a"(value), "Nd" (port));
 }
