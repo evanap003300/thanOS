@@ -26,8 +26,6 @@ void Shell::execute() {
 		terminal.printf("ap_ev\n");
 	} else if (String(buffer) == "clear") {
 		terminal.clear();
-	} else if (String(buffer) == "load_theme") {
-		terminal.printf("loaded theme");	
 	} else {
 		terminal.printf("Unknown command.\n");
 	}
@@ -57,5 +55,4 @@ void Shell::on_key_pressed(char c) {
 		terminal.draw_char(c);
 	}
 }
-
 
