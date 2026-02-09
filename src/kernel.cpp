@@ -60,8 +60,12 @@ extern "C" void kmain(void) {
 	terminal = Renderer(framebuffer);
 
 	terminal.clear();
+
+	terminal.setColor(0x00FFFF);
 	terminal.printf("System Initializing...\n");
 	
+
+	terminal.setColor(0x00FF00);	
 	GDT::init();
 	terminal.printf("[OK] GDT Loaded!\n");
 	
@@ -78,14 +82,19 @@ extern "C" void kmain(void) {
 	terminal.draw_cursor(true);
 
 	terminal.printf("[OK] PMM Initalized\n");
+
+	terminal.setColor(0x00FFFF);
 	pmm.init();
 
 	uint64_t cr3_phys;
 	__asm__ volatile ("mov %%cr3, %0" : "=r" (cr3_phys));
 
 	kernel_vmm = PageTableManager((PageTable*)cr3_phys);
+
+	terminal.setColor(0x00FF00);
 	terminal.printf("[OK] VMM Initalized\n");
 
+	terminal.setColor(0x00FFFF);
 	void* kmain_phys = kernel_vmm.virt_to_phys((void*)&kmain);
 	terminal.printf("VMM: kmain Virtual Address: %x\n", &kmain);
 	terminal.printf("VMM: kmain Physical Address: %x\n", kmain_phys);
@@ -93,20 +102,26 @@ extern "C" void kmain(void) {
 	void* heapStart = (void*)0x100000000;
 	uint64_t page_count = 100;
 	InitializeHeap(heapStart, page_count);
+
+	terminal.setColor(0x00FF00);
 	terminal.printf("[OK] Heap Initalized\n");
 
 	struct limine_file* module = module_request.response->modules[0];
 		
 	terminal.printf("[OK] Module Loaded\n");	
+
+	terminal.setColor(0x00FFFF);
 	terminal.printf("FS: Address: %x\n", module->address);
 	terminal.printf("FS: Size:    %d bytes\n", module->size);
 	terminal.printf("FS: Path:    %s\n", module->path);	
 
 	Tar::parse((uint64_t)module->address);
 
+	terminal.setColor(0x00FFFF);
 	String sysInit = "System Initalized.\n";
 	terminal.printf("%s", sysInit.c_str());
 
+	terminal.setColor(0xFFFFFF);
 	shell.init();
 
 	while (true) {
