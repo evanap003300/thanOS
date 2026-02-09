@@ -20,6 +20,8 @@ public:
 	size_t length() const;
 	const char* c_str() const; 
 
-	friend String operator+(const String& lhs, const String& rhs);
+	String operator+(const String& rhs);
+	bool operator==(const String& other) const;
+	bool operator==(const char* other) const;
 };
 

@@ -57,6 +57,7 @@ String& String::operator=(const String& other) {
 
 	this->buffer[this->_length] = '\0';
 
+
 	return *this;
 }
 
@@ -73,17 +74,17 @@ const char* String::c_str() const {
 	return this->buffer;
 }
 
-String operator+(const String& lhs, const String& rhs) {
+String String::operator+(const String& rhs) {
 	String result;
 	
 	delete[] result.buffer;
 
-	result._length = lhs._length + rhs._length;
+	result._length = this->_length + rhs._length;
 	result.buffer = new char[result._length + 1];
 
 	size_t i = 0;
-	for (; i < lhs._length; i++) {
-		result.buffer[i] = lhs.buffer[i];
+	for (; i < this->_length; i++) {
+		result.buffer[i] = this->buffer[i];
 	}
 
 	for (size_t j = 0; j < rhs._length; j++) {
@@ -94,3 +95,33 @@ String operator+(const String& lhs, const String& rhs) {
 	return result;
 }
 
+bool String::operator==(const String& other) const {
+	if (this->_length != other._length) {
+		return false;
+	}	
+	
+	for (size_t i = 0; i < this->_length; i++) {
+		if (this->buffer[i] != other.buffer[i]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool String::operator==(const char* other) const {
+	if (other == nullptr) {
+		return (this->_length == 0);
+	}
+
+	size_t i = 0;
+	
+	while (i < this->_length && other[i] != '\0') {
+		if (this->buffer[i] != other[i]) {
+			return false;
+		}
+		i++;
+	}
+
+	return (i == this->_length && other[i] == '\0');
+}

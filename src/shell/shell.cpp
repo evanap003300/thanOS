@@ -1,18 +1,8 @@
 #include "shell/shell.h"
 #include "graphics/render.h"
+#include "std/string.h"
 
 Shell shell;
-
-bool str_eq(const char* str1, const char* str2) {
-	int i = 0;
-	while (str1[i] != 0 && str2[i] != 0) {
-		if (str1[i] != str2[i]) {
-			return false;
-		}
-		i++;
-	}
-	return str1[i] == str2[i];
-}
 
 void Shell::init() {
 	buffer_index = 0;
@@ -32,13 +22,15 @@ void Shell::handle_backspace() {
 
 
 void Shell::execute() {
-        if (str_eq(buffer, "whoami")) {
-                terminal.printf("evanap\n");
-        } else if (str_eq(buffer, "clear")) {
-                terminal.clear();
-        } else {
-                terminal.printf("Unknown command.\n");
-        }
+	if (String(buffer) == "whoami") {
+		terminal.printf("ap_ev\n");
+	} else if (String(buffer) == "clear") {
+		terminal.clear();
+	} else if (String(buffer) == "load_theme") {
+		terminal.printf("loaded theme");	
+	} else {
+		terminal.printf("Unknown command.\n");
+	}
 }
 
 void Shell::on_key_pressed(char c) {
