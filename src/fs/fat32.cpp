@@ -4,7 +4,7 @@
 
 Fat32 fat32;
 uint8_t fat_buffer[512];
-uint8_t dir_buffer[512];  // Global buffer for directory reads
+uint8_t dir_buffer[512]; 
 
 bool Fat32::init(uint32_t partition_offset) {
 	this->partition_start_lba = partition_offset;
@@ -58,9 +58,6 @@ void Fat32::list_directory(uint32_t cluster) {
 
 	for (uint32_t i = 0; i < entries_count; i++) {
 		DirectoryEntry* entry = &entries[i];
-
-		/* debug
-		 */
 
 		if (entry->name[0] != 0x00) {
              terminal.printf("[%d] Raw: 0x%x Attr: 0x%x Name: ", i, entry->name[0], entry->attributes);
