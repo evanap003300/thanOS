@@ -68,6 +68,10 @@ void Shell::execute() {
 		}
 		if (fat32.init(partition_lba)) {
 			terminal.printf("FAT32 Mounted successfully!\n");
+			uint32_t root_cluster = fat32.root_cluster;
+			uint32_t root_lba = fat32.cluster_to_lba(root_cluster);
+			terminal.printf("Root Directory is at Cluster: %d\n", root_cluster);
+			terminal.printf("Sector LBA: %d\n", root_lba);
 			fat32.print_info();
 		} else {
 			terminal.printf("Error: Failed to read FAT32 BPB.\n");

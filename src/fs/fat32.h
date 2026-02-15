@@ -34,16 +34,17 @@ struct BPB {
 } __attribute__((packed));
 
 class Fat32 {
-private:
+public:
 	uint32_t partition_start_lba;
 	uint32_t root_cluster;
 	uint32_t fat_start_lba;	
 	uint32_t data_start_lba;
 	uint8_t sectors_per_cluster;
-
-public:
+	
 	bool init(uint32_t partition_offset);
 	void print_info();
+	uint32_t cluster_to_lba(uint32_t cluster);
+	bool read_cluster(uint32_t cluster, uint8_t* buffer);
 };
 
 extern Fat32 fat32;

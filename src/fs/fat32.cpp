@@ -27,3 +27,19 @@ void Fat32::print_info() {
     	terminal.printf("FAT Start LBA: %d\n", fat_start_lba);
     	terminal.printf("Data Start LBA: %d\n", data_start_lba);
 }
+
+uint32_t Fat32::cluster_to_lba(uint32_t cluster) { 
+	if (cluster < 2) {
+		return 0;
+	}
+
+	return this->data_start_lba + ((cluster - 2) * this->sectors_per_cluster);
+}
+
+bool Fat32::read_cluster(uint32_t cluster, uint8_t* buffer) {
+	uint32_t lba = cluster_to_lba(cluster);
+	if (lba == 0) return false;
+	ATA::read_sectors(lba, this->sectors_per_cluster, buffer);
+
+	return true;
+}
