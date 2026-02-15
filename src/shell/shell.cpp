@@ -4,6 +4,7 @@
 #include "fs/vfs.h"
 #include "drivers/ata.h"
 #include "fs/mbr.h"
+#include "fs/fat32.h"
 
 Shell shell;
 
@@ -61,10 +62,15 @@ void Shell::execute() {
 		terminal.printf("\n");
 	} else if (String(buffer) == "mount") {
 		uint32_t partition_lba = MBRParser::find_first_partition();
-		if (partition_lba > 0) {
-			terminal.printf("FAT32 Partition found at Sector: %d\n", partition_lba);
-		} else {
+		if (partition_lba == 0) {
 			terminal.printf("Error: No FAT32 partition found.\n");
+			return;
+		}
+		if (fat32.init(partition_lba)) {
+			terminal.printf("FAT32 Mounted successfully!\n");
+			fat32.print_info();
+		} else {
+			terminal.printf("Error: Failed to read FAT32 BPB.\n");
 		}	
 	} else {
 		terminal.printf("Unknown command.\n");
