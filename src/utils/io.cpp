@@ -20,3 +20,9 @@ uint8_t inb(uint16_t port) {
 void io_wait(void) {
 	outb(0x80, 0);
 }
+
+uint16_t insw(uint16_t port) {
+	uint16_t result;
+	__asm__ volatile ("inw %1, %0" : "=a" (result) : "Nd" (port));
+	return result;
+}
