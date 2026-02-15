@@ -9,6 +9,9 @@ LD := x86_64-elf-ld
 
 AS := nasm
 
+PARTED := parted
+MKFS := mkfs.fat
+
 CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine -mcmodel=kernel -mno-red-zone -mgeneral-regs-only -I$(SRC_DIR)
 
 CPP_SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
@@ -35,7 +38,10 @@ $(KERNEL): $(OBJS)
 	$(LD) -T linker.ld -o $@ $(OBJS) -z max-page-size=0x1000
 
 disk.img:
-	qemu-img create -f raw disk.img 10M
+	qemu-img create -f raw disk.img 64M
+	$(PARTED) -s $@ mklabel msdos
+	$(PARTED) -s $@ mkpart primary fat32 1MiB 100%
+	$(MKFS) -F 32 -n "THANOS_HDD" --offset 2048 $@
 
 $(ISO): $(KERNEL) limine.conf
 	mkdir -p iso_root/limine
@@ -62,8 +68,16 @@ $(ISO): $(KERNEL) limine.conf
 	rm -rf iso_root
 
 run: $(ISO) disk.img
-	qemu-system-x86_64 -drive file=disk.img,format=raw,index=0,media=disk -cdrom $(ISO) -m 512M -display sdl
+	qemu-system-x86_64 \
+		-drive id=disk,file=disk.img,if=none,format=raw \
+		-device ide-hd,drive=disk,bus=ide.0,unit=0 \
+		-drive id=cd,file=$(ISO),if=none,format=raw\
+		-device ide-cd,drive=cd,bus=ide.1,unit=0 \
+		-boot d \
+		-m 512M \
+		-display sdl
 
 clean:
-	rm -rf $(BUILD_DIR) 
+	rm -rf $(BUILD_DIR)
+	rm disk.img	
 

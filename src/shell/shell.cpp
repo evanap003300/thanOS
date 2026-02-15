@@ -3,6 +3,7 @@
 #include "std/string.h"
 #include "fs/vfs.h"
 #include "drivers/ata.h"
+#include "fs/mbr.h"
 
 Shell shell;
 
@@ -58,6 +59,13 @@ void Shell::execute() {
 			terminal.printf("%x ", sector_data[i]);
 		}
 		terminal.printf("\n");
+	} else if (String(buffer) == "mount") {
+		uint32_t partition_lba = MBRParser::find_first_partition();
+		if (partition_lba > 0) {
+			terminal.printf("FAT32 Partition found at Sector: %d\n", partition_lba);
+		} else {
+			terminal.printf("Error: No FAT32 partition found.\n");
+		}	
 	} else {
 		terminal.printf("Unknown command.\n");
 	}
