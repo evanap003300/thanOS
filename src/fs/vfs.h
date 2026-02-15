@@ -10,4 +10,9 @@ struct File {
 	bool is_directory;
 };
 
+class VFS {
+public: 
+	static File* open(const char* filename);
+};
+
 extern Vector<File> file_system;
