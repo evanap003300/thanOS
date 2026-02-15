@@ -78,6 +78,8 @@ void Shell::execute() {
 		}	
 	} else if (String(buffer) == "ls") {
 		fat32.list_directory(fat32.root_cluster);
+	} else if (String(buffer) == "cat") {
+		fat32.cat("TEST.TXT");
 	} else {
 		terminal.printf("Unknown command.\n");
 	}

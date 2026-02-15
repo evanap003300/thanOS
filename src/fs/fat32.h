@@ -62,6 +62,7 @@ public:
 	uint32_t cluster_to_lba(uint32_t cluster);
 	bool read_cluster(uint32_t cluster, uint8_t* buffer);
 	void list_directory(uint32_t cluster);
+	void cat(char* filename);
 };
 
 extern Fat32 fat32;

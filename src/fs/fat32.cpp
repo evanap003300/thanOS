@@ -5,6 +5,7 @@
 Fat32 fat32;
 uint8_t fat_buffer[512];
 uint8_t dir_buffer[512]; 
+uint8_t cluster_buffer[512];
 
 bool Fat32::init(uint32_t partition_offset) {
 	this->partition_start_lba = partition_offset;
@@ -54,8 +55,6 @@ void Fat32::list_directory(uint32_t cluster) {
 	uint32_t cluster_size_bytes = this->sectors_per_cluster * 512;
 	uint32_t entries_count = cluster_size_bytes / 32;
 
-	terminal.printf("--- Listing Cluster %d (%d entries) ---\n", cluster, entries_count);
-
 	for (uint32_t i = 0; i < entries_count; i++) {
 		DirectoryEntry* entry = &entries[i];
 
@@ -90,3 +89,47 @@ void Fat32::list_directory(uint32_t cluster) {
 		}
 	}
 }
+
+void Fat32::cat(char* filename) {
+	if (!read_cluster(root_cluster, cluster_buffer)) {
+		terminal.printf("Error: Failed to read root directory.\n");
+		return;
+	}
+	
+	DirectoryEntry* entries = (DirectoryEntry*)cluster_buffer;
+	uint32_t entries_count = (sectors_per_cluster * 512) / 32;
+
+	DirectoryEntry* target_entry = nullptr;
+
+	for (uint32_t i = 0; i < entries_count; i++) {
+		DirectoryEntry* entry = &entries[i];
+
+		if (entry->name[0] == 0x00) break;
+		if (entry->name[0] == 0xE5) continue;
+		if (entry->attributes == 0x0F) continue;
+		if (entry->attributes & 0x10) continue;
+		if (entry->attributes & 0x08) continue;
+
+		// just for testing right now
+		if (entry->name[0] == filename[0]) {
+			target_entry = entry;
+			break;
+		}
+	}
+
+	if (target_entry == nullptr) {
+		terminal.printf("File not found.\n");
+		return;
+	}
+
+	uint32_t file_cluster = ((uint32_t)target_entry->cluster_high << 16) | target_entry->cluster_low;
+	uint32_t file_size = target_entry->file_size;
+
+	read_cluster(file_cluster, cluster_buffer);
+
+	for (uint32_t i = 0; i < file_size; i++) {
+		terminal.printf("%c", cluster_buffer[i]);
+	}
+}
+
+
