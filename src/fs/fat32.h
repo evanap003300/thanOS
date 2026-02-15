@@ -33,6 +33,21 @@ struct BPB {
 	uint8_t fs_type[8];
 } __attribute__((packed));
 
+struct DirectoryEntry {
+	uint8_t name[8];
+	uint8_t ext[3];
+	uint8_t attributes;
+	uint8_t reserved;
+	uint8_t creatoin_time_tenths;
+	uint16_t creation_time;
+	uint16_t access_date;
+	uint16_t cluster_high;
+	uint16_t time;
+	uint16_t date;
+	uint16_t cluster_low;
+	uint32_t file_size;
+} __attribute__((packed));
+
 class Fat32 {
 public:
 	uint32_t partition_start_lba;
@@ -45,6 +60,7 @@ public:
 	void print_info();
 	uint32_t cluster_to_lba(uint32_t cluster);
 	bool read_cluster(uint32_t cluster, uint8_t* buffer);
+	void list_directory(uint32_t cluster);
 };
 
 extern Fat32 fat32;

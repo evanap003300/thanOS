@@ -76,6 +76,8 @@ void Shell::execute() {
 		} else {
 			terminal.printf("Error: Failed to read FAT32 BPB.\n");
 		}	
+	} else if (String(buffer) == "ls") {
+		fat32.list_directory(fat32.root_cluster);
 	} else {
 		terminal.printf("Unknown command.\n");
 	}

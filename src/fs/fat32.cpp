@@ -32,7 +32,6 @@ uint32_t Fat32::cluster_to_lba(uint32_t cluster) {
 	if (cluster < 2) {
 		return 0;
 	}
-
 	return this->data_start_lba + ((cluster - 2) * this->sectors_per_cluster);
 }
 
@@ -42,4 +41,43 @@ bool Fat32::read_cluster(uint32_t cluster, uint8_t* buffer) {
 	ATA::read_sectors(lba, this->sectors_per_cluster, buffer);
 
 	return true;
+}
+
+void Fat32::list_directory(uint32_t cluster) {
+	uint8_t buffer[512];
+
+	if (!read_cluster(cluster, buffer)) {
+		return;
+	}
+
+	DirectoryEntry* entries = (DirectoryEntry*)buffer;
+
+	terminal.printf("--- Listing Directory (Cluster %d) ---\n", cluster);
+	for (int i = 0; i < 16; i++) {
+		DirectoryEntry* entry = &entries[i];
+		if (entry->name[0] == 0x00) break;
+		if (entry->name[0] == 0xE5) continue;
+		if (entry->attributes == 0x0F) continue;
+
+		for (int j = 0; j < 8; j++) {
+			if (entry->name[j] != ' ') {
+				terminal.printf("%c", entry->name[j]);
+			}
+		}
+
+		if ((entry->attributes & 0x10) == 0) {
+			terminal.printf(".");
+			for (int j = 0; j < 3; j++) {
+				if (entry->ext[j] != ' ') {
+					terminal.printf("c", entry->ext[j]);
+				}
+			}
+		}
+
+		if (entry->attributes & 0x10) {
+			terminal.printf("/");
+		}
+
+		terminal.printf("\n");
+	}
 }
