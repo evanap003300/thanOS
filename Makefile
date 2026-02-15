@@ -11,6 +11,7 @@ AS := nasm
 
 PARTED := parted
 MKFS := mkfs.fat
+MCOPY := mcopy
 
 CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -Ilimine -mcmodel=kernel -mno-red-zone -mgeneral-regs-only -I$(SRC_DIR)
 
@@ -42,6 +43,8 @@ disk.img:
 	$(PARTED) -s $@ mklabel msdos
 	$(PARTED) -s $@ mkpart primary fat32 1MiB 100%
 	$(MKFS) -F 32 -n "THANOS_HDD" --offset 2048 $@
+	echo "This is a text file from the Makefile" > test.txt
+	$(MCOPY) -i $@@@1M test.txt ::TEST.TXT
 
 $(ISO): $(KERNEL) limine.conf
 	mkdir -p iso_root/limine

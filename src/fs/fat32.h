@@ -38,8 +38,9 @@ struct DirectoryEntry {
 	uint8_t ext[3];
 	uint8_t attributes;
 	uint8_t reserved;
-	uint8_t creatoin_time_tenths;
+	uint8_t creation_time_tenths;
 	uint16_t creation_time;
+	uint16_t creation_date;
 	uint16_t access_date;
 	uint16_t cluster_high;
 	uint16_t time;

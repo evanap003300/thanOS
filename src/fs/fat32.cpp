@@ -4,6 +4,7 @@
 
 Fat32 fat32;
 uint8_t fat_buffer[512];
+uint8_t dir_buffer[512];  // Global buffer for directory reads
 
 bool Fat32::init(uint32_t partition_offset) {
 	this->partition_start_lba = partition_offset;
@@ -44,20 +45,29 @@ bool Fat32::read_cluster(uint32_t cluster, uint8_t* buffer) {
 }
 
 void Fat32::list_directory(uint32_t cluster) {
-	uint8_t buffer[4096];
-
-	if (!read_cluster(cluster, buffer)) {
+	if (!read_cluster(cluster, dir_buffer)) {
 		return;
 	}
 
-	DirectoryEntry* entries = (DirectoryEntry*)buffer;
+	DirectoryEntry* entries = (DirectoryEntry*)dir_buffer;
 
-	terminal.printf("--- Listing Directory (Cluster %d) ---\n", cluster);
 	uint32_t cluster_size_bytes = this->sectors_per_cluster * 512;
 	uint32_t entries_count = cluster_size_bytes / 32;
 
+	terminal.printf("--- Listing Cluster %d (%d entries) ---\n", cluster, entries_count);
+
 	for (uint32_t i = 0; i < entries_count; i++) {
 		DirectoryEntry* entry = &entries[i];
+
+		/* debug
+		 */
+
+		if (entry->name[0] != 0x00) {
+             terminal.printf("[%d] Raw: 0x%x Attr: 0x%x Name: ", i, entry->name[0], entry->attributes);
+             for(int k=0; k<11; k++) terminal.printf("%c", ((char*)entry)[k]); 
+             terminal.printf("\n");
+        }
+
 		if (entry->name[0] == 0x00) break;
 		if (entry->name[0] == 0xE5) continue;
 		if (entry->attributes == 0x0F) continue;
