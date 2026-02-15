@@ -2,6 +2,7 @@
 #include "graphics/render.h"
 #include "std/string.h"
 #include "fs/vfs.h"
+#include "drivers/ata.h"
 
 Shell shell;
 
@@ -29,7 +30,7 @@ void Shell::execute() {
 		terminal.printf("ap_ev\n");
 	} else if (String(buffer) == "clear") {
 		terminal.clear();
-	} else if (String(buffer) == "load") {
+	} else if (String(buffer) == "cyan") {
 		File* config = VFS::open("./theme.cfg");
 		if (config == nullptr) {
 			terminal.printf("Error: theme.cfg not found.\n");
@@ -48,6 +49,15 @@ void Shell::execute() {
 		}
 			       
 
+	} else if (String(buffer) == "dump") {
+		uint8_t sector_data[512];
+		ATA::read_sectors(0, 1, sector_data);
+
+		terminal.printf("Disk Data (LBA): ");
+		for (int i = 0; i < 20; i++) {
+			terminal.printf("%x ", sector_data[i]);
+		}
+		terminal.printf("\n");
 	} else {
 		terminal.printf("Unknown command.\n");
 	}

@@ -21,7 +21,7 @@ OBJS := $(CPP_OBJS) $(ASM_OBJS)
 
 .PHONY: all clean run 
 
-all: $(ISO) 
+all: $(ISO) disk.img
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
@@ -33,6 +33,9 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm
 
 $(KERNEL): $(OBJS) 
 	$(LD) -T linker.ld -o $@ $(OBJS) -z max-page-size=0x1000
+
+disk.img:
+	qemu-img create -f raw disk.img 10M
 
 $(ISO): $(KERNEL) limine.conf
 	mkdir -p iso_root/limine
@@ -58,8 +61,8 @@ $(ISO): $(KERNEL) limine.conf
 	./Limine/limine bios-install $(ISO)
 	rm -rf iso_root
 
-run: $(ISO)
-	qemu-system-x86_64 -cdrom $(ISO) -m 512M -display sdl
+run: $(ISO) disk.img
+	qemu-system-x86_64 -drive file=disk.img,format=raw,index=0,media=disk -cdrom $(ISO) -m 512M -display sdl
 
 clean:
 	rm -rf $(BUILD_DIR) 
