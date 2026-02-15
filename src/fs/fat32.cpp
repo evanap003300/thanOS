@@ -44,7 +44,7 @@ bool Fat32::read_cluster(uint32_t cluster, uint8_t* buffer) {
 }
 
 void Fat32::list_directory(uint32_t cluster) {
-	uint8_t buffer[512];
+	uint8_t buffer[4096];
 
 	if (!read_cluster(cluster, buffer)) {
 		return;
@@ -53,26 +53,36 @@ void Fat32::list_directory(uint32_t cluster) {
 	DirectoryEntry* entries = (DirectoryEntry*)buffer;
 
 	terminal.printf("--- Listing Directory (Cluster %d) ---\n", cluster);
-	for (int i = 0; i < 16; i++) {
+	uint32_t cluster_size_bytes = this->sectors_per_cluster * 512;
+	uint32_t entries_count = cluster_size_bytes / 32;
+
+	for (uint32_t i = 0; i < entries_count; i++) {
 		DirectoryEntry* entry = &entries[i];
 		if (entry->name[0] == 0x00) break;
 		if (entry->name[0] == 0xE5) continue;
 		if (entry->attributes == 0x0F) continue;
 
+		char name_buffer[13];
+		int out_idx = 0;
+
 		for (int j = 0; j < 8; j++) {
 			if (entry->name[j] != ' ') {
-				terminal.printf("%c", entry->name[j]);
+				name_buffer[out_idx++] = entry->name[j];
 			}
 		}
 
 		if ((entry->attributes & 0x10) == 0) {
-			terminal.printf(".");
+			name_buffer[out_idx++] = '.';
 			for (int j = 0; j < 3; j++) {
 				if (entry->ext[j] != ' ') {
-					terminal.printf("c", entry->ext[j]);
+					name_buffer[out_idx++] = entry->ext[j];
 				}
 			}
 		}
+
+		name_buffer[out_idx] = '\0';
+
+		terminal.printf("%s\n", name_buffer);
 
 		if (entry->attributes & 0x10) {
 			terminal.printf("/");
