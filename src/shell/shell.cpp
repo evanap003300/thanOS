@@ -30,15 +30,7 @@ void Shell::execute() {
 	} else if (String(buffer) == "clear") {
 		terminal.clear();
 	} else if (String(buffer) == "load") {
-		File* config = nullptr;
-
-		for (size_t i = 0; i < file_system.size(); i++) {
-			if (file_system[i].name == "./theme.cfg") {
-		       		config = &file_system[i];
-				break;
-			}
-		}
-
+		File* config = VFS::open("./theme.cfg");
 		if (config == nullptr) {
 			terminal.printf("Error: theme.cfg not found.\n");
 		} else {
