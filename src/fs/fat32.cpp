@@ -59,12 +59,6 @@ void Fat32::list_directory(uint32_t cluster) {
 	for (uint32_t i = 0; i < entries_count; i++) {
 		DirectoryEntry* entry = &entries[i];
 
-		if (entry->name[0] != 0x00) {
-             terminal.printf("[%d] Raw: 0x%x Attr: 0x%x Name: ", i, entry->name[0], entry->attributes);
-             for(int k=0; k<11; k++) terminal.printf("%c", ((char*)entry)[k]); 
-             terminal.printf("\n");
-        }
-
 		if (entry->name[0] == 0x00) break;
 		if (entry->name[0] == 0xE5) continue;
 		if (entry->attributes == 0x0F) continue;
@@ -94,7 +88,5 @@ void Fat32::list_directory(uint32_t cluster) {
 		if (entry->attributes & 0x10) {
 			terminal.printf("/");
 		}
-
-		terminal.printf("\n");
 	}
 }
