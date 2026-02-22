@@ -132,4 +132,61 @@ void Fat32::cat(char* filename) {
 	}
 }
 
+uint32_t Fat32::read_file(const char* filename, uint8_t* out_buffer) {
+	if (!read_cluster(root_cluster, cluster_buffer)) {
+		return 0;
+	}
 
+	DirectoryEntry* entries = (DirectoryEntry*)cluster_buffer;
+	uint32_t entries_count = (sectors_per_cluster * 512) / 32;
+	DirectoryEntry* target_entry = nullptr;
+
+	for (uint32_t i = 0; i < entries_count; i++) {
+		DirectoryEntry* entry = &entries[i];
+
+		if (entry->name[0] == 0x00) break;
+		if (entry->name[0] == 0xE5) continue;
+		if (entry->attributes == 0x0F) continue;
+		if (entry->attributes & 0x18) continue;
+
+		char name_buffer[13];
+		int idx = 0;
+
+		for (int j = 0; j < 8; j++) {
+			if (entry->name[j] != ' ') {
+				name_buffer[idx++] = entry->name[j];		
+			}
+		}
+
+		name_buffer[idx++] = '.';
+		for (int j = 0; j < 3; j++) {
+			if (entry->ext[j] != ' ') {
+				name_buffer[idx++] = entry->ext[j];
+			}
+		}
+
+		name_buffer[idx] = '\0';
+
+		if (String(name_buffer) == filename) {
+			target_entry = entry;
+			break;
+		}
+	}
+	
+	if (target_entry == nullptr) {
+		return 0;
+	}
+
+	uint32_t file_cluster = ((uint32_t)target_entry->cluster_high << 16) | target_entry->cluster_low;
+	uint32_t file_size = target_entry->file_size;
+
+	if (!read_cluster(file_cluster, cluster_buffer)) {
+		return 0;
+	}
+
+	for (uint32_t i = 0; i < file_size; i++) {
+		out_buffer[i] = cluster_buffer[i];
+	}
+
+	return file_size;
+}

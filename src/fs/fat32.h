@@ -63,6 +63,7 @@ public:
 	bool read_cluster(uint32_t cluster, uint8_t* buffer);
 	void list_directory(uint32_t cluster);
 	void cat(char* filename);
+	uint32_t read_file(const char* filename, uint8_t* out_buffer);
 };
 
 extern Fat32 fat32;

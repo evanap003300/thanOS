@@ -79,7 +79,20 @@ void Shell::execute() {
 	} else if (String(buffer) == "ls") {
 		fat32.list_directory(fat32.root_cluster);
 	} else if (String(buffer) == "cat") {
-		fat32.cat("TEST.TXT");
+		uint8_t file_data[4096];
+
+		uint32_t size = fat32.read_file("TEST.TXT", file_data);
+
+		if (size > 0) {
+			terminal.printf("Loaded %d bytes into memory!\n", size);
+			terminal.printf("--- CONTENTS ---\n");
+			for (uint32_t i = 0; i < size; i++) {
+				terminal.printf("%c", file_data[i]);
+			}
+			terminal.printf("\n");
+		} else {
+			terminal.printf("Error: File not found.\n");
+		}
 	} else {
 		terminal.printf("Unknown command.\n");
 	}
