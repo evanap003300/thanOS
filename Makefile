@@ -35,8 +35,14 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm
 	@mkdir -p $(dir $@)
 	$(AS) -f elf64 $< -o $@
 
-$(KERNEL): $(OBJS) 
+$(KERNEL): $(OBJS)
 	$(LD) -T linker.ld -o $@ $(OBJS) -z max-page-size=0x1000
+
+USER_CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -mno-red-zone -mgeneral-regs-only -mcmodel=large -fno-pie -nostdlib
+
+$(BUILD_DIR)/test.elf: user/test.cpp user/user.ld
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user.ld -o $@ user/test.cpp
 
 disk.img:
 	qemu-img create -f raw disk.img 64M
@@ -46,7 +52,7 @@ disk.img:
 	echo "This is a text file from the Makefile" > test.txt
 	$(MCOPY) -i $@@@1M test.txt ::TEST.TXT
 
-$(ISO): $(KERNEL) limine.conf
+$(ISO): $(KERNEL) limine.conf $(BUILD_DIR)/test.elf
 	mkdir -p iso_root/limine
 	mkdir -p iso_root/EFI/BOOT
 
@@ -57,7 +63,11 @@ $(ISO): $(KERNEL) limine.conf
 	cp Limine/limine-bios.sys Limine/limine-bios-cd.bin Limine/limine-uefi-cd.bin iso_root/limine/
 	cp Limine/BOOTX64.EFI iso_root/EFI/BOOT/
 
-	tar -cf $(BUILD_DIR)/initrd.tar -C src/initrd .
+	rm -rf $(BUILD_DIR)/initrd_root
+	mkdir -p $(BUILD_DIR)/initrd_root
+	cp -r src/initrd/. $(BUILD_DIR)/initrd_root/
+	cp $(BUILD_DIR)/test.elf $(BUILD_DIR)/initrd_root/
+	tar -cf $(BUILD_DIR)/initrd.tar -C $(BUILD_DIR)/initrd_root .
 	cp $(BUILD_DIR)/initrd.tar iso_root/
 
 	xorriso -as mkisofs -b limine/limine-bios-cd.bin \

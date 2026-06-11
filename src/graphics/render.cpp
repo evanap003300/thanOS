@@ -181,7 +181,7 @@ void Renderer::print_number(int number) {
 	
 }
 
-void Renderer::print_hex(uint32_t number) {
+void Renderer::print_hex(uint64_t number) {
 	print("0x");
 
 	if (number == 0) {
@@ -247,7 +247,7 @@ void Renderer::printf(const char* format, ...) {
 				break;
 			}
 			case 'x': {
-				uint32_t number = va_arg(args, uint32_t);
+				uint64_t number = va_arg(args, uint64_t);
 				print_hex(number);
 				break;
 			}

@@ -150,6 +150,33 @@ Questions you should be able to answer afterward:
 
 ---
 
+## Trace 5 — `run` executes a program from disk(ish)
+
+**Start:** you type `run` and hit Enter. **End:** `Program returned: 1342`.
+
+**Territory:** `Makefile`, `user/test.cpp`, `user/user.ld`, `src/shell/shell.cpp`,
+`src/fs/vfs.cpp`, `src/loader/elf.cpp`, `src/cpu/pmm.cpp`, `src/cpu/vmm.cpp`
+
+Questions you should be able to answer afterward:
+
+- How did `test.elf` get into the initrd, and how does the kernel find its bytes
+  at runtime? (Build pipeline → tar → Limine module → `Vector<File>`.)
+- The loader does four things per PT_LOAD segment — name them, in order, and
+  say why each exists.
+- Why is the answer 1342? Which variable proves `.data` loading, which proves
+  BSS zeroing, and why are they `volatile`?
+- Why is the binary linked at `0x140000000` instead of the classic `0x400000`?
+  What compiler flag follows from that address choice?
+- Why must the file be ET_EXEC, and what does GCC produce by default instead?
+- What privilege level did the program run at — and inside what *context* did
+  it execute? Why is that second answer surprising?
+
+### The trace (write from memory)
+
+*(yours — good opener for next session)*
+
+---
+
 ## Misconception Log
 
 What you got wrong is the most valuable thing this doc captures. One row each;
@@ -166,3 +193,4 @@ these become flashcards.
 | 2026-06-10 | (didn't know) what IF is | The Interrupt Flag bit in RFLAGS — the CPU's master "may I be interrupted?" switch. `sti` sets it, `cli` clears it; interrupt gates auto-clear it on entry; `iretq` restores it. `sti`+`hlt` = sleep until an event (kmain's loop); `cli`+`hlt` = sleep forever (`hcf`) | `kernel.cpp:80`, `kernel.cpp:35` |
 | 2026-06-10 | "rdi points to where the process is executing" | rdi is the SysV ABI *first-argument* register; the stub does `mov rdi, rsp` after the last push, so it points at saved r15 — the lowest address of the `registers` struct. "Where it was executing" is RIP, which is saved *inside* that struct | `idt_asm.asm:49` |
 | 2026-06-10 | Debugging: reached for logging before using the symptom | The blinking cursor already proves the shared machinery works (IDT loaded, PIC remapped, sti, common stub, dispatch). Suspects are only where the keyboard path *diverges* from the timer path: `pic_unmask(1)`, gate 33, EOI(1), keymap | `kernel.cpp:77`, `idt.cpp:93` |
+| 2026-06-10 | "Without .init_array, globals are left uninitialized" | BSS globals are guaranteed *zero* (Limine zeroes it) — never garbage. The real failure is zeroed-but-**unconstructed**: constructors whose work amounts to more than writing zeros (e.g. a global `String` that must allocate) silently never happen | `kernel.cpp:52` |

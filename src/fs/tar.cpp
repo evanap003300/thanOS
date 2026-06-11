@@ -38,14 +38,28 @@ namespace Tar {
 
 			if (size > 0 && header->typeflag == '0') {
 				terminal.printf("TAR: File: %s | Size: %d bytes\n", header->name, size);
-				terminal.printf("TAR: %s: ", header->name);
+
+				// A file is only "text" if its bytes happen to be printable
+				bool is_text = true;
 				for (size_t i = 0; i < size && i < 30; i++) {
-					if (content[i] != '\n') {
-						terminal.printf("%c", content[i]);
+					unsigned char c = (unsigned char)content[i];
+					if ((c < 0x20 || c > 0x7E) && c != '\n' && c != '\t' && c != '\r') {
+						is_text = false;
+						break;
 					}
 				}
-				terminal.printf("\n");
 
+				terminal.printf("TAR: %s: ", header->name);
+				if (is_text) {
+					for (size_t i = 0; i < size && i < 30; i++) {
+						if (content[i] != '\n') {
+							terminal.printf("%c", content[i]);
+						}
+					}
+					terminal.printf("\n");
+				} else {
+					terminal.printf("(binary)\n");
+				}
 			}
 
 			// Add file to file system

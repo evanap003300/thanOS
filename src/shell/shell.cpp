@@ -5,6 +5,7 @@
 #include "drivers/ata.h"
 #include "fs/mbr.h"
 #include "fs/fat32.h"
+#include "loader/elf.h"
 
 Shell shell;
 
@@ -93,6 +94,25 @@ void Shell::execute() {
 		} else {
 			terminal.printf("Error: File not found.\n");
 		}
+	} else if (String(buffer) == "run") {
+		File* program = VFS::open("./test.elf");
+
+		if (program == nullptr) {
+			terminal.printf("Error: test.elf not found.\n");
+			return;
+		}
+
+		void* entry = ELF::load(program->data);
+
+		if (entry == nullptr) {
+			terminal.printf("Error: Failed to load ELF.\n");
+			return;
+		}
+
+		int (*program_main)() = (int (*)())entry;
+		int result = program_main();
+
+		terminal.printf("Program returned: %d\n", result);
 	} else {
 		terminal.printf("Unknown command.\n");
 	}

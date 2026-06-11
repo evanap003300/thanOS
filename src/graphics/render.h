@@ -26,7 +26,7 @@ class Renderer {
 		void toggle_cursor();
 
 		void print_number(int number);
-		void print_hex(uint32_t number);
+		void print_hex(uint64_t number);
 
 		void printf(const char* format, ...);
 		void setColor(uint32_t new_color);

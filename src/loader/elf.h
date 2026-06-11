@@ -38,3 +38,13 @@ struct __attribute__((packed)) Elf64_Phdr {
     Elf64_Xword p_memsz;         // Segment size in memory
     Elf64_Xword p_align;         // Segment alignment constraints
 };
+
+#define ELFCLASS64 2     // e_ident[4]: 64-bit object
+#define EM_X86_64  0x3E  // e_machine: AMD x86-64
+#define ET_EXEC    2     // e_type: static executable (not PIE/shared)
+#define PT_LOAD    1     // p_type: segment that must be loaded into memory
+
+namespace ELF {
+	// Returns the entry point, or nullptr if the image is invalid
+	void* load(uint8_t* image);
+}
