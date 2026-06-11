@@ -1,4 +1,5 @@
 #include "cpu/interrupts.h"
+#include "cpu/syscall.h"
 #include "graphics/render.h"
 #include "drivers/pic.h"
 #include "utils/io.h"
@@ -47,6 +48,10 @@ extern "C" void isr_handler(registers* regs) {
 		return;
 	} else if (int_num == 33) {
 		keyboard_handler_main();
+		return;
+	} else if (int_num == 128) {
+		// Software interrupt: no PIC involved, no EOI needed
+		syscall_handler(regs);
 		return;
 	} else {
 		terminal.printf("Unknown Interrupt: %d\n", int_num);

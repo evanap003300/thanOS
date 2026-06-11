@@ -238,7 +238,11 @@ void Renderer::printf(const char* format, ...) {
 			}
 			case 'c': {
 				char c = (char)va_arg(args, int);
-				draw_char(c);
+				if (c == '\n') {
+					next_line();
+				} else {
+					draw_char(c);
+				}
 				break;
 			}
 			case 'd': {
