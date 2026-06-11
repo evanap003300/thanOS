@@ -45,6 +45,26 @@ Renderer terminal;
 // Init global file system
 Vector<File> file_system;
 
+typedef void (*GlobalCtor)();
+extern "C" GlobalCtor __init_array_start[];
+extern "C" GlobalCtor __init_array_end[];
+
+static void run_global_constructors() {
+	int count = 0;
+	for (GlobalCtor* ctor = __init_array_start; ctor != __init_array_end; ctor++) {
+		(*ctor)();
+		count++;
+	}
+	terminal.printf("[OK] C++ Runtime: %d global constructors ran\n", count);
+}
+
+struct CtorProof {
+	CtorProof() {
+		terminal.printf("[OK] Global constructor fired!\n");
+	}
+};
+static CtorProof ctor_proof;
+
 // Kernel entry point
 extern "C" void kmain(void) {
 	if (framebuffer_request.response == NULL || framebuffer_request.response->framebuffer_count < 1) {
@@ -64,8 +84,9 @@ extern "C" void kmain(void) {
 	terminal.setColor(0x00FFFF);
 	terminal.printf("System Initializing...\n");
 	
+	terminal.setColor(0x00FF00);
+	run_global_constructors();
 
-	terminal.setColor(0x00FF00);	
 	GDT::init();
 	terminal.printf("[OK] GDT Loaded!\n");
 	
