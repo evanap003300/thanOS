@@ -40,9 +40,17 @@ $(KERNEL): $(OBJS)
 
 USER_CXXFLAGS := -ffreestanding -fno-exceptions -fno-rtti -O2 -Wall -Wextra -mno-red-zone -mgeneral-regs-only -mcmodel=large -fno-pie -nostdlib
 
-$(BUILD_DIR)/test.elf: user/test.cpp user/user.ld
+$(BUILD_DIR)/test.elf: user/test.cpp user/syscalls.h user/user.ld
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user.ld -o $@ user/test.cpp
+
+$(BUILD_DIR)/proc_a.elf: user/proc_a.cpp user/syscalls.h user/user_a.ld
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user_a.ld -o $@ user/proc_a.cpp
+
+$(BUILD_DIR)/proc_b.elf: user/proc_b.cpp user/syscalls.h user/user_b.ld
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user_b.ld -o $@ user/proc_b.cpp
 
 disk.img:
 	qemu-img create -f raw disk.img 64M
@@ -52,7 +60,7 @@ disk.img:
 	echo "This is a text file from the Makefile" > test.txt
 	$(MCOPY) -i $@@@1M test.txt ::TEST.TXT
 
-$(ISO): $(KERNEL) limine.conf $(BUILD_DIR)/test.elf
+$(ISO): $(KERNEL) limine.conf $(BUILD_DIR)/test.elf $(BUILD_DIR)/proc_a.elf $(BUILD_DIR)/proc_b.elf
 	mkdir -p iso_root/limine
 	mkdir -p iso_root/EFI/BOOT
 
@@ -66,7 +74,7 @@ $(ISO): $(KERNEL) limine.conf $(BUILD_DIR)/test.elf
 	rm -rf $(BUILD_DIR)/initrd_root
 	mkdir -p $(BUILD_DIR)/initrd_root
 	cp -r src/initrd/. $(BUILD_DIR)/initrd_root/
-	cp $(BUILD_DIR)/test.elf $(BUILD_DIR)/initrd_root/
+	cp $(BUILD_DIR)/test.elf $(BUILD_DIR)/proc_a.elf $(BUILD_DIR)/proc_b.elf $(BUILD_DIR)/initrd_root/
 	tar -cf $(BUILD_DIR)/initrd.tar -C $(BUILD_DIR)/initrd_root .
 	cp $(BUILD_DIR)/initrd.tar iso_root/
 

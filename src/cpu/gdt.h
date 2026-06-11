@@ -45,4 +45,3 @@ class GDT {
 
 extern "C" void load_gdt(uint64_t gdt_descriptor_address);
 extern "C" void load_tss(uint16_t selector);
-extern "C" void jump_to_user(void* rip, void* rsp);

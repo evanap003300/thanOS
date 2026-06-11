@@ -14,6 +14,7 @@
 #include "fs/tar.h"
 #include "fs/vfs.h"
 #include "utils/io.h"
+#include "proc/process.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -141,6 +142,8 @@ extern "C" void kmain(void) {
 	terminal.setColor(0x00FFFF);
 	String sysInit = "System Initalized.\n";
 	terminal.printf("%s", sysInit.c_str());
+
+	scheduler.init();
 
 	terminal.setColor(0xFFFFFF);
 	shell.init();

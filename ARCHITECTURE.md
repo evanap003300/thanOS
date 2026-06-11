@@ -177,6 +177,34 @@ Questions you should be able to answer afterward:
 
 ---
 
+## Trace 6 — `mt` runs two programs at once
+
+**Start:** you type `mt` and hit Enter. **End:** `ABBAABBB...` interleaving, two
+clean exits, shell prompt back.
+
+**Territory:** `src/proc/process.{h,cpp}`, `src/cpu/interrupts.cpp` (timer branch),
+`src/cpu/syscall.cpp` (exit), `src/shell/shell.cpp`, `user/proc_a.cpp`
+
+Questions you should be able to answer afterward:
+
+- What *is* a process in thanOS, concretely — which struct, which fields?
+- A context switch happens inside which interrupt handler, and what single line
+  of code actually performs it?
+- Why do the letters appear in clumps of ~3 instead of strict ABAB?
+- How does a brand-new process start running when nothing ever "calls" it?
+  (What five values were forged, and what instruction consumes them?)
+- Why is process 0 special, and when does it run?
+- What does `exit` do now that it didn't do before — and what *still* doesn't
+  happen on exit? (Hint: who frees the stack pages?)
+- Why is it (currently) safe for all processes to share one TSS rsp0 stack —
+  and what kernel feature would break that?
+
+### The trace (write from memory)
+
+*(yours)*
+
+---
+
 ## Misconception Log
 
 What you got wrong is the most valuable thing this doc captures. One row each;

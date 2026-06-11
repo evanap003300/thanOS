@@ -11,8 +11,14 @@
 * Malloc, new, and delete implementations for memory management
 * Custom string and vector implementation
 * Read from disk in Fat-32 format
+* ELF loader (loads programs from the initrd)
+* Userland: ring 3 execution with GDT user segments + TSS
+* Syscalls via int 0x80 (write, exit — Linux-compatible numbers)
+* Preemptive multitasking: timer-driven round-robin scheduler (`mt` runs two processes at once)
 
 ## Current to-dos:
-- [ ] Switch to elf format
-- [ ] Get userland (Lots of things need to be done first)
+- [ ] Per-process address spaces (separate page tables, real isolation)
+- [ ] Shell as a user process
+- [ ] FAT32: follow cluster chains (multi-cluster files)
+- [ ] Doom :)
 

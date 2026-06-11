@@ -3,6 +3,7 @@
 #include "graphics/render.h"
 #include "drivers/pic.h"
 #include "utils/io.h"
+#include "proc/process.h"
 
 extern "C" void keyboard_handler_main();
 
@@ -37,7 +38,7 @@ extern "C" void isr_handler(registers* regs) {
 		while(true) { 
 			asm ("hlt");
 		}
-	} else if (int_num == 32) { 
+	} else if (int_num == 32) {
 		timer_ticks++;
 
 		if (timer_ticks % 9 == 0) {
@@ -45,6 +46,10 @@ extern "C" void isr_handler(registers* regs) {
 		}
 
 		pic_send_eoi(0);
+
+		// Every tick is a scheduling opportunity: this may swap
+		// the frame that iretq is about to restore
+		scheduler.schedule(regs);
 		return;
 	} else if (int_num == 33) {
 		keyboard_handler_main();

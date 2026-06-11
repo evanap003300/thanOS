@@ -2,27 +2,11 @@ bits 64
 
 global load_gdt
 global load_tss
-global jump_to_user
 
 ; Load the task register with the TSS selector
 load_tss:
 	ltr di
 	ret
-
-; rdi = user RIP, rsi = user stack top
-; Builds the 5-value frame iretq pops when changing privilege,
-; then "returns" into ring 3
-jump_to_user:
-	mov ax, 0x1B       ; user data selector (0x18 | RPL 3)
-	mov ds, ax
-	mov es, ax
-
-	push 0x1B          ; SS
-	push rsi           ; RSP
-	push 0x202         ; RFLAGS (IF=1: interrupts stay on in ring 3)
-	push 0x23          ; CS (0x20 | RPL 3)
-	push rdi           ; RIP
-	iretq
 
 load_gdt:
 	lgdt[rdi]

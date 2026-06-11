@@ -1,6 +1,6 @@
 #include "cpu/syscall.h"
 #include "graphics/render.h"
-#include "shell/shell.h"
+#include "proc/process.h"
 
 // write(fd, buf, count) -> rdi, rsi, rdx. fd is ignored for now.
 static void sys_write(registers* regs) {
@@ -10,7 +10,7 @@ static void sys_write(registers* regs) {
 	// Never trust a user pointer: only accept addresses inside the
 	// user program / user stack region, or userland could ask the
 	// kernel to read its own memory on its behalf
-	if (buf < 0x140000000 || buf + count > 0x150004000) {
+	if (buf < 0x140000000 || buf + count > 0x180000000) {
 		regs->rax = (uint64_t)-1;
 		return;
 	}
@@ -23,17 +23,12 @@ static void sys_write(registers* regs) {
 	regs->rax = count;
 }
 
-// exit(code) -> rdi. There is no scheduler and no other process yet,
-// so "exit" means: report, give the shell back, idle forever.
+// exit(code) -> rdi. Retire the slot, schedule someone else into
+// the frame iretq is about to restore.
 static void sys_exit(registers* regs) {
-	terminal.printf("Process exited with code: %d\n", (int)regs->rdi);
+	terminal.printf("\nProcess %d exited with code: %d\n", scheduler.current, (int)regs->rdi);
 
-	shell.init();
-
-	__asm__ volatile ("sti");
-	while (true) {
-		__asm__ volatile ("hlt");
-	}
+	scheduler.exit_current(regs);
 }
 
 void syscall_handler(registers* regs) {

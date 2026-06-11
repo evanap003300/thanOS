@@ -6,10 +6,7 @@
 #include "fs/mbr.h"
 #include "fs/fat32.h"
 #include "loader/elf.h"
-#include "cpu/gdt.h"
-#include "cpu/pmm.h"
-#include "cpu/vmm.h"
-#include "drivers/pic.h"
+#include "proc/process.h"
 
 Shell shell;
 
@@ -113,22 +110,28 @@ void Shell::execute() {
 			return;
 		}
 
-		// Map a 16 KiB user-accessible stack
-		uint64_t user_stack_top = 0x150004000;
-		for (uint64_t page = 0x150000000; page < user_stack_top; page += 0x1000) {
-			if (kernel_vmm.virt_to_phys((void*)page) == NULL) {
-				void* phys = pmm.alloc_page();
-				kernel_vmm.map_memory((void*)page, phys, PTE_USER_SUPER);
+		int pid = scheduler.create(entry);
+		terminal.printf("Started process %d\n", pid);
+	} else if (String(buffer) == "mt") {
+		const char* names[2] = { "./proc_a.elf", "./proc_b.elf" };
+
+		for (int i = 0; i < 2; i++) {
+			File* program = VFS::open(names[i]);
+
+			if (program == nullptr) {
+				terminal.printf("Error: %s not found.\n", names[i]);
+				continue;
 			}
+
+			void* entry = ELF::load(program->data);
+
+			if (entry == nullptr) {
+				continue;
+			}
+
+			int pid = scheduler.create(entry);
+			terminal.printf("Started %s as process %d\n", names[i], pid);
 		}
-
-		terminal.printf("Entering ring 3 at %x\n", entry);
-
-		// We never return to this interrupt handler, so retire the
-		// keyboard IRQ now or the PIC will never deliver another one
-		pic_send_eoi(1);
-
-		jump_to_user(entry, (void*)user_stack_top);
 	} else {
 		terminal.printf("Unknown command.\n");
 	}
