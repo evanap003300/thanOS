@@ -18,6 +18,7 @@ extern "C" void isr_handler(registers* regs) {
 		terminal.printf("Error Code:       %x\n", regs->error_code);
 	
 		terminal.printf("RIP (Instruction): %x\n", regs->rip);
+		terminal.printf("CS (Ring):         %x\n", regs->cs);
 
 		int int_num = regs->interrupt_number;
 

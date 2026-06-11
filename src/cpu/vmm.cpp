@@ -13,9 +13,12 @@ PageTableManager::PageTableManager(PageTable* pml4_physical_address) {
 		}
 }
 
-void PageTableManager::map_memory(void* virtual_memory, void* physical_memory) {
+void PageTableManager::map_memory(void* virtual_memory, void* physical_memory, uint64_t flags) {
 	uint64_t virt = (uint64_t)virtual_memory;
 	uint64_t phys = (uint64_t)physical_memory;
+	// The user bit must be set at every level of the walk,
+	// not just the leaf, or ring 3 can't reach the page
+	uint64_t table_flags = PTE_PRESENT | PTE_READ_WRITE | (flags & PTE_USER_SUPER);
         uint64_t offset = hhdm_request.response->offset;
 	
 	uint64_t pml4_index = (virt >> 39) & 0x1FF;
@@ -34,9 +37,10 @@ void PageTableManager::map_memory(void* virtual_memory, void* physical_memory) {
 		
 		for (int i = 0; i < 512; i++) ptr[i] = 0;
 
-		table->entries[pml4_index] = (uint64_t)new_page | PTE_PRESENT | PTE_READ_WRITE;
-		next_table = (PageTable*)ptr; 
+		table->entries[pml4_index] = (uint64_t)new_page | table_flags;
+		next_table = (PageTable*)ptr;
 	} else {
+		table->entries[pml4_index] |= (flags & PTE_USER_SUPER);
 		uint64_t phys_addr = entry & PTE_ADDRESS_MASK;
 		next_table = (PageTable*)(phys_addr + offset);
 	}
@@ -51,9 +55,10 @@ void PageTableManager::map_memory(void* virtual_memory, void* physical_memory) {
 		
 		for (int i = 0; i < 512; i++) ptr[i] = 0;
 
-		table->entries[pdp_index] = (uint64_t)new_page | PTE_PRESENT | PTE_READ_WRITE;
+		table->entries[pdp_index] = (uint64_t)new_page | table_flags;
 		next_table = (PageTable*)ptr;
 	} else {
+		table->entries[pdp_index] |= (flags & PTE_USER_SUPER);
 		uint64_t phys_addr = entry & PTE_ADDRESS_MASK;
 		next_table = (PageTable*)(phys_addr + offset);
 	}
@@ -67,15 +72,16 @@ void PageTableManager::map_memory(void* virtual_memory, void* physical_memory) {
 
 		for (int i = 0; i < 512; i++) ptr[i] = 0;
 
-		table->entries[pd_index] = (uint64_t)new_page | PTE_PRESENT | PTE_READ_WRITE;
+		table->entries[pd_index] = (uint64_t)new_page | table_flags;
 		next_table = (PageTable*)ptr;
 	} else {
+		table->entries[pd_index] |= (flags & PTE_USER_SUPER);
 		uint64_t phys_addr = entry & PTE_ADDRESS_MASK;
 		next_table = (PageTable*)(phys_addr + offset);
 	}
 	table = next_table;
 
-	table->entries[pt_index] = phys | PTE_PRESENT | PTE_READ_WRITE;
+	table->entries[pt_index] = phys | PTE_PRESENT | PTE_READ_WRITE | flags;
 
 	__asm__ volatile ("invlpg (%0)" : : "r" (virtual_memory) : "memory");
 }

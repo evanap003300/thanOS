@@ -25,7 +25,7 @@ public:
 	
 	PageTableManager(PageTable* pml4_physical_address);
 
-	void map_memory(void* virtual_memory, void* physical_memory);
+	void map_memory(void* virtual_memory, void* physical_memory, uint64_t flags = 0);
 	void* virt_to_phys(void* virtual_memory);
 };
 

@@ -6,6 +6,10 @@
 #include "fs/mbr.h"
 #include "fs/fat32.h"
 #include "loader/elf.h"
+#include "cpu/gdt.h"
+#include "cpu/pmm.h"
+#include "cpu/vmm.h"
+#include "drivers/pic.h"
 
 Shell shell;
 
@@ -109,10 +113,22 @@ void Shell::execute() {
 			return;
 		}
 
-		int (*program_main)() = (int (*)())entry;
-		int result = program_main();
+		// Map a 16 KiB user-accessible stack
+		uint64_t user_stack_top = 0x150004000;
+		for (uint64_t page = 0x150000000; page < user_stack_top; page += 0x1000) {
+			if (kernel_vmm.virt_to_phys((void*)page) == NULL) {
+				void* phys = pmm.alloc_page();
+				kernel_vmm.map_memory((void*)page, phys, PTE_USER_SUPER);
+			}
+		}
 
-		terminal.printf("Program returned: %d\n", result);
+		terminal.printf("Entering ring 3 at %x\n", entry);
+
+		// We never return to this interrupt handler, so retire the
+		// keyboard IRQ now or the PIC will never deliver another one
+		pic_send_eoi(1);
+
+		jump_to_user(entry, (void*)user_stack_top);
 	} else {
 		terminal.printf("Unknown command.\n");
 	}

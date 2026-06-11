@@ -60,7 +60,7 @@ void* load(uint8_t* image) {
 				if (phys == NULL) {
 					return nullptr;
 				}
-				kernel_vmm.map_memory((void*)page, phys);
+				kernel_vmm.map_memory((void*)page, phys, PTE_USER_SUPER);
 			}
 		}
 

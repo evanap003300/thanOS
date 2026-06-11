@@ -1,11 +1,15 @@
 #include <stdint.h>
 
-// Lives in .data: the value 1000 is stored in the ELF file itself
-volatile int data_value = 1000;
+volatile uint64_t counter;
 
-// Lives in .bss: not stored in the file, the loader must zero it
-volatile int bss_value;
+extern "C" void _start() {
+	// Spin for a bit: while this runs in ring 3 the kernel's timer
+	// interrupt keeps firing, so the cursor keeps blinking
+	for (counter = 0; counter < 300000000ull; counter++) { }
 
-extern "C" int _start() {
-	return data_value + bss_value + 342;
+	// hlt is privileged. In ring 3 this must die with a #GP -
+	// the crash screen is the proof we were unprivileged.
+	asm volatile ("hlt");
+
+	for (;;) { }
 }
