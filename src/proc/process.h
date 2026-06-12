@@ -10,6 +10,7 @@ enum ProcessState {
 
 struct Process {
 	registers context;
+	uint64_t cr3;
 	ProcessState state;
 };
 
@@ -20,7 +21,7 @@ public:
 	int current;
 
 	void init();
-	int create(void* entry);
+	int create(void* entry, uint64_t cr3);
 	void schedule(registers* regs);
 	void exit_current(registers* regs);
 };

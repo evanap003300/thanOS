@@ -44,13 +44,13 @@ $(BUILD_DIR)/test.elf: user/test.cpp user/syscalls.h user/user.ld
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user.ld -o $@ user/test.cpp
 
-$(BUILD_DIR)/proc_a.elf: user/proc_a.cpp user/syscalls.h user/user_a.ld
+$(BUILD_DIR)/proc_a.elf: user/proc_a.cpp user/syscalls.h user/user.ld
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user_a.ld -o $@ user/proc_a.cpp
+	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user.ld -o $@ user/proc_a.cpp
 
-$(BUILD_DIR)/proc_b.elf: user/proc_b.cpp user/syscalls.h user/user_b.ld
+$(BUILD_DIR)/proc_b.elf: user/proc_b.cpp user/syscalls.h user/user.ld
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user_b.ld -o $@ user/proc_b.cpp
+	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user.ld -o $@ user/proc_b.cpp
 
 disk.img:
 	qemu-img create -f raw disk.img 64M

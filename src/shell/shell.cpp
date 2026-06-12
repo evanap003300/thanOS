@@ -7,6 +7,7 @@
 #include "fs/fat32.h"
 #include "loader/elf.h"
 #include "proc/process.h"
+#include "cpu/vmm.h"
 
 Shell shell;
 
@@ -103,14 +104,21 @@ void Shell::execute() {
 			return;
 		}
 
-		void* entry = ELF::load(program->data);
+		uint64_t cr3 = create_address_space();
+
+		if (cr3 == 0) {
+			terminal.printf("Error: Out of memory.\n");
+			return;
+		}
+
+		void* entry = ELF::load(program->data, cr3);
 
 		if (entry == nullptr) {
 			terminal.printf("Error: Failed to load ELF.\n");
 			return;
 		}
 
-		int pid = scheduler.create(entry);
+		int pid = scheduler.create(entry, cr3);
 		terminal.printf("Started process %d\n", pid);
 	} else if (String(buffer) == "mt") {
 		const char* names[2] = { "./proc_a.elf", "./proc_b.elf" };
@@ -123,13 +131,19 @@ void Shell::execute() {
 				continue;
 			}
 
-			void* entry = ELF::load(program->data);
+			uint64_t cr3 = create_address_space();
+
+			if (cr3 == 0) {
+				continue;
+			}
+
+			void* entry = ELF::load(program->data, cr3);
 
 			if (entry == nullptr) {
 				continue;
 			}
 
-			int pid = scheduler.create(entry);
+			int pid = scheduler.create(entry, cr3);
 			terminal.printf("Started %s as process %d\n", names[i], pid);
 		}
 	} else {

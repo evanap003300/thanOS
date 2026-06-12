@@ -30,3 +30,8 @@ public:
 };
 
 extern PageTableManager kernel_vmm;
+
+// Allocate a fresh PML4: empty lower half (process territory),
+// kernel half shared by reference. Returns its physical address
+// (i.e. a value you can load into CR3), or 0 on failure.
+uint64_t create_address_space();

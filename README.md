@@ -15,9 +15,10 @@
 * Userland: ring 3 execution with GDT user segments + TSS
 * Syscalls via int 0x80 (write, exit — Linux-compatible numbers)
 * Preemptive multitasking: timer-driven round-robin scheduler (`mt` runs two processes at once)
+* Per-process address spaces: every process gets its own page tables (CR3 switch in the scheduler), programs all link at the same virtual address
 
 ## Current to-dos:
-- [ ] Per-process address spaces (separate page tables, real isolation)
+- [ ] Blocking read() syscall (needs process states + per-process kernel stacks)
 - [ ] Shell as a user process
 - [ ] FAT32: follow cluster chains (multi-cluster files)
 - [ ] Doom :)

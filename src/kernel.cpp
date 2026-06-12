@@ -121,7 +121,9 @@ extern "C" void kmain(void) {
 	terminal.printf("VMM: kmain Virtual Address: %x\n", &kmain);
 	terminal.printf("VMM: kmain Physical Address: %x\n", kmain_phys);
 
-	void* heapStart = (void*)0x100000000;
+	// Higher half: the kernel heap must be visible in every process's
+	// address space, and only the kernel half (PML4 256-511) is shared
+	void* heapStart = (void*)0xFFFF900000000000;
 	uint64_t page_count = 100;
 	InitializeHeap(heapStart, page_count);
 

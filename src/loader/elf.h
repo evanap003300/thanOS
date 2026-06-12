@@ -45,6 +45,7 @@ struct __attribute__((packed)) Elf64_Phdr {
 #define PT_LOAD    1     // p_type: segment that must be loaded into memory
 
 namespace ELF {
-	// Returns the entry point, or nullptr if the image is invalid
-	void* load(uint8_t* image);
+	// Load the image into the address space rooted at cr3 (physical
+	// PML4 address). Returns the entry point, or nullptr on failure.
+	void* load(uint8_t* image, uint64_t cr3);
 }

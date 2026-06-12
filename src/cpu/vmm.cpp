@@ -86,6 +86,29 @@ void PageTableManager::map_memory(void* virtual_memory, void* physical_memory, u
 	__asm__ volatile ("invlpg (%0)" : : "r" (virtual_memory) : "memory");
 }
 
+uint64_t create_address_space() {
+	void* phys = pmm.alloc_page();
+	if (phys == NULL) {
+		return 0;
+	}
+
+	uint64_t offset = hhdm_request.response->offset;
+	uint64_t* pml4 = (uint64_t*)((uint64_t)phys + offset);
+	uint64_t* kernel_pml4 = (uint64_t*)kernel_vmm.pml4_address;
+
+	// Lower half (0-255) belongs to the process. Higher half
+	// (256-511) points at the kernel's sub-tables, so every
+	// space sees the same kernel and stays in sync.
+	for (int i = 0; i < 256; i++) {
+		pml4[i] = 0;
+	}
+	for (int i = 256; i < 512; i++) {
+		pml4[i] = kernel_pml4[i];
+	}
+
+	return (uint64_t)phys;
+}
+
 void* PageTableManager::virt_to_phys(void* virtual_memory) {
 	uint64_t virt = (uint64_t)virtual_memory;
 	uint64_t offset = hhdm_request.response->offset;

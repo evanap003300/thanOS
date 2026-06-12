@@ -8,10 +8,11 @@ void Scheduler::init() {
 	// The kernel idle loop is process 0. Its context gets saved
 	// the first time we switch away from it.
 	processes[0].state = PROC_READY;
+	__asm__ volatile ("mov %%cr3, %0" : "=r"(processes[0].cr3));
 	current = 0;
 }
 
-int Scheduler::create(void* entry) {
+int Scheduler::create(void* entry, uint64_t cr3) {
 	int slot = -1;
 	for (int i = 1; i < MAX_PROCESSES; i++) {
 		if (processes[i].state == PROC_UNUSED) {
@@ -24,19 +25,19 @@ int Scheduler::create(void* entry) {
 		return -1;
 	}
 
-	// Each slot gets its own 16 KiB user stack. Stacks are reused
-	// across a slot's lifetimes and never freed (no cleanup yet).
-	uint64_t stack_base = 0x150000000 + (uint64_t)slot * 0x10000;
+	// Every process sees its 16 KiB stack at the same virtual
+	// address - separate address spaces make that legal.
+	// Physical pages are never freed (no cleanup yet).
+	PageTableManager user_vmm((PageTable*)cr3);
+	uint64_t stack_base = 0x150000000;
 	uint64_t stack_top = stack_base + 0x4000;
 
 	for (uint64_t page = stack_base; page < stack_top; page += 0x1000) {
-		if (kernel_vmm.virt_to_phys((void*)page) == NULL) {
-			void* phys = pmm.alloc_page();
-			if (phys == NULL) {
-				return -1;
-			}
-			kernel_vmm.map_memory((void*)page, phys, PTE_USER_SUPER);
+		void* phys = pmm.alloc_page();
+		if (phys == NULL) {
+			return -1;
 		}
+		user_vmm.map_memory((void*)page, phys, PTE_USER_SUPER);
 	}
 
 	// Hand-forge the frame iretq will pop the first time this
@@ -49,6 +50,7 @@ int Scheduler::create(void* entry) {
 	p->context.rsp = stack_top;
 	p->context.ss = 0x1B;
 
+	p->cr3 = cr3;
 	p->state = PROC_READY;
 
 	return slot;
@@ -78,6 +80,14 @@ void Scheduler::schedule(registers* regs) {
 
 	// The context switch: what iretq restores is now someone else
 	*regs = processes[current].context;
+
+	// Writing CR3 flushes the TLB, so skip it when the next
+	// process lives in the same address space
+	uint64_t active_cr3;
+	__asm__ volatile ("mov %%cr3, %0" : "=r"(active_cr3));
+	if (active_cr3 != processes[current].cr3) {
+		__asm__ volatile ("mov %0, %%cr3" : : "r"(processes[current].cr3) : "memory");
+	}
 }
 
 void Scheduler::exit_current(registers* regs) {

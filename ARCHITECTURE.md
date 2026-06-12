@@ -198,6 +198,11 @@ Questions you should be able to answer afterward:
   happen on exit? (Hint: who frees the stack pages?)
 - Why is it (currently) safe for all processes to share one TSS rsp0 stack —
   and what kernel feature would break that?
+- (post-isolation) proc_a and proc_b are both linked at 0x140000000 and both
+  mutate `msg` at the same virtual address. Walk the page-table reason this
+  doesn't collide. Why did the kernel heap have to move to the higher half
+  first? What one instruction did the context switch gain, and why is it the
+  expensive one?
 
 ### The trace (write from memory)
 
