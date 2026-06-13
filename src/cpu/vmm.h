@@ -39,3 +39,9 @@ uint64_t create_address_space();
 // The HHDM offset: phys + offset = a virtual address the kernel
 // can always dereference, regardless of which CR3 is active
 uint64_t get_hhdm_offset();
+
+// Free every physical page a process owns: its leaf pages and the
+// lower-half page tables, then the PML4 itself. Leaves the shared
+// kernel half (entries 256-511) untouched. cr3 = the process's PML4
+// physical address. MUST NOT be the currently active address space.
+void free_address_space(uint64_t cr3);

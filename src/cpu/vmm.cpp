@@ -90,6 +90,43 @@ uint64_t get_hhdm_offset() {
 	return hhdm_request.response->offset;
 }
 
+void free_address_space(uint64_t cr3) {
+	uint64_t offset = hhdm_request.response->offset;
+	uint64_t* pml4 = (uint64_t*)(cr3 + offset);
+
+	// Lower half only (0-255): the process's private memory. The
+	// upper half points at shared kernel tables - never free those.
+	for (int i = 0; i < 256; i++) {
+		if (!(pml4[i] & PTE_PRESENT)) continue;
+		uint64_t pdpt_phys = pml4[i] & PTE_ADDRESS_MASK;
+		uint64_t* pdpt = (uint64_t*)(pdpt_phys + offset);
+
+		for (int j = 0; j < 512; j++) {
+			if (!(pdpt[j] & PTE_PRESENT)) continue;
+			uint64_t pd_phys = pdpt[j] & PTE_ADDRESS_MASK;
+			uint64_t* pd = (uint64_t*)(pd_phys + offset);
+
+			for (int k = 0; k < 512; k++) {
+				if (!(pd[k] & PTE_PRESENT)) continue;
+				uint64_t pt_phys = pd[k] & PTE_ADDRESS_MASK;
+				uint64_t* pt = (uint64_t*)(pt_phys + offset);
+
+				// Free the leaf data pages before the table that lists them
+				for (int l = 0; l < 512; l++) {
+					if (!(pt[l] & PTE_PRESENT)) continue;
+					pmm.free_page((void*)(pt[l] & PTE_ADDRESS_MASK));
+				}
+				pmm.free_page((void*)pt_phys);
+			}
+			pmm.free_page((void*)pd_phys);
+		}
+		pmm.free_page((void*)pdpt_phys);
+	}
+
+	// Finally the root table itself
+	pmm.free_page((void*)cr3);
+}
+
 uint64_t create_address_space() {
 	void* phys = pmm.alloc_page();
 	if (phys == NULL) {

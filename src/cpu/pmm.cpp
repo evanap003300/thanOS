@@ -139,3 +139,11 @@ void PMM::free_page(void* address) {
 	bitmap_unset(page_number);
 }
 
+uint64_t PMM::free_pages() {
+	uint64_t count = 0;
+	for (uint64_t i = 0; i < total_ram_pages; i++) {
+		if (!bitmap_test(i)) count++;
+	}
+	return count;
+}
+

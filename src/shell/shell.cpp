@@ -8,6 +8,7 @@
 #include "loader/elf.h"
 #include "proc/process.h"
 #include "cpu/vmm.h"
+#include "cpu/pmm.h"
 
 Shell shell;
 
@@ -35,6 +36,9 @@ void Shell::execute() {
 		terminal.printf("ap_ev\n");
 	} else if (String(buffer) == "clear") {
 		terminal.clear();
+	} else if (String(buffer) == "mem") {
+		uint64_t free = pmm.free_pages();
+		terminal.printf("Free: %d pages (%d KB)\n", free, free * 4);
 	} else if (String(buffer) == "cyan") {
 		File* config = VFS::open("./theme.cfg");
 		if (config == nullptr) {

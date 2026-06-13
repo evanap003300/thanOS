@@ -14,6 +14,7 @@ public:
 	void init();
 	void* alloc_page();
 	void free_page(void* address);
+	uint64_t free_pages();
 
 private:
 	void bitmap_set(uint64_t bit);

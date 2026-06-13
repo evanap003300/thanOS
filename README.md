@@ -24,9 +24,9 @@
 
 ## Current to-dos:
 
-### Robustness (finish the process model)
-- [ ] User-fault isolation: a faulting process is killed, the kernel survives
-- [ ] Process reaping: free a dead process's pages, stack, and page tables on exit
+### Robustness (finish the process model) — DONE
+* User-fault isolation: a faulting process is killed, the kernel survives (`crash` command demos it)
+* Process reaping: a dead process's pages, tables, and PML4 are freed on exit (`mem` command shows zero leak)
 
 ### Foundation for apps
 - [ ] Growable heap

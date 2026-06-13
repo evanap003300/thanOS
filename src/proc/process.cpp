@@ -98,6 +98,7 @@ void Scheduler::schedule(registers* regs) {
 
 void Scheduler::exit_current(registers* regs, int code) {
 	int parent = processes[current].parent;
+	uint64_t dead_cr3 = processes[current].cr3;
 
 	processes[current].state = PROC_UNUSED;
 
@@ -107,6 +108,12 @@ void Scheduler::exit_current(registers* regs, int code) {
 		processes[parent].context.rax = (uint64_t)code;
 		processes[parent].state = PROC_READY;
 	}
+
+	// We're still standing on the dying process's page tables. Step
+	// onto the kernel's address space (process 0's, shared kernel half
+	// keeps our code + stack mapped) before tearing the dead one down.
+	__asm__ volatile ("mov %0, %%cr3" : : "r"(processes[0].cr3) : "memory");
+	free_address_space(dead_cr3);
 
 	schedule(regs);
 }
