@@ -13,8 +13,17 @@ extern "C" void isr_handler(registers* regs) {
 	uint64_t int_num = regs->interrupt_number;
 	
 	if (int_num < 32) {
+		// Fault from ring 3 (CS low bits == 3): a user process crashed.
+		// Kill just that process and reschedule - the kernel survives.
+		if (regs->cs & 3) {
+			terminal.printf("[process %d faulted: exception %d] killed\n", scheduler.current, (int)int_num);
+			scheduler.exit_current(regs, -1);
+			return;
+		}
+
+		// Fault from ring 0: a kernel bug, genuinely fatal.
 		terminal.clear();
-		terminal.printf("--- CPI EXCEPTION RECEIVED ---\n");
+		terminal.printf("--- KERNEL PANIC ---\n");
 
 		terminal.printf("Interrupt Number: %d\n", regs->interrupt_number);
 		terminal.printf("Error Code:       %x\n", regs->error_code);
@@ -27,7 +36,7 @@ extern "C" void isr_handler(registers* regs) {
 		if (int_num == 0) {
 			terminal.printf("Description: Divide by Zero\n");
 		} else if (int_num == 13) {
-			terminal.printf("Description: General Protectoin Fault\n");
+			terminal.printf("Description: General Protection Fault\n");
 		} else if (int_num == 14) {
 			terminal.printf("Description: Page Fault\n");
 		}
@@ -35,7 +44,7 @@ extern "C" void isr_handler(registers* regs) {
 		terminal.printf("--------------------------\n");
 		terminal.printf("System Halted.\n");
 
-		while(true) { 
+		while (true) {
 			asm ("hlt");
 		}
 	} else if (int_num == 32) {

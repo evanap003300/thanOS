@@ -64,6 +64,10 @@ $(BUILD_DIR)/shell.elf: user/shell.cpp user/syscalls.h user/user.ld
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user.ld -o $@ user/shell.cpp
 
+$(BUILD_DIR)/crash.elf: user/crash.cpp user/syscalls.h user/user.ld
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(USER_CXXFLAGS) -no-pie -static -z max-page-size=0x1000 -T user/user.ld -o $@ user/crash.cpp
+
 disk.img:
 	qemu-img create -f raw disk.img 64M
 	$(PARTED) -s $@ mklabel msdos
@@ -72,7 +76,7 @@ disk.img:
 	echo "This is a text file from the Makefile" > test.txt
 	$(MCOPY) -i $@@@1M test.txt ::TEST.TXT
 
-$(ISO): $(KERNEL) limine.conf $(BUILD_DIR)/test.elf $(BUILD_DIR)/proc_a.elf $(BUILD_DIR)/proc_b.elf $(BUILD_DIR)/echo.elf $(BUILD_DIR)/launcher.elf $(BUILD_DIR)/shell.elf
+$(ISO): $(KERNEL) limine.conf $(BUILD_DIR)/test.elf $(BUILD_DIR)/proc_a.elf $(BUILD_DIR)/proc_b.elf $(BUILD_DIR)/echo.elf $(BUILD_DIR)/launcher.elf $(BUILD_DIR)/shell.elf $(BUILD_DIR)/crash.elf
 	mkdir -p iso_root/limine
 	mkdir -p iso_root/EFI/BOOT
 
@@ -86,7 +90,7 @@ $(ISO): $(KERNEL) limine.conf $(BUILD_DIR)/test.elf $(BUILD_DIR)/proc_a.elf $(BU
 	rm -rf $(BUILD_DIR)/initrd_root
 	mkdir -p $(BUILD_DIR)/initrd_root
 	cp -r src/initrd/. $(BUILD_DIR)/initrd_root/
-	cp $(BUILD_DIR)/test.elf $(BUILD_DIR)/proc_a.elf $(BUILD_DIR)/proc_b.elf $(BUILD_DIR)/echo.elf $(BUILD_DIR)/launcher.elf $(BUILD_DIR)/shell.elf $(BUILD_DIR)/initrd_root/
+	cp $(BUILD_DIR)/test.elf $(BUILD_DIR)/proc_a.elf $(BUILD_DIR)/proc_b.elf $(BUILD_DIR)/echo.elf $(BUILD_DIR)/launcher.elf $(BUILD_DIR)/shell.elf $(BUILD_DIR)/crash.elf $(BUILD_DIR)/initrd_root/
 	tar -cf $(BUILD_DIR)/initrd.tar -C $(BUILD_DIR)/initrd_root .
 	cp $(BUILD_DIR)/initrd.tar iso_root/
 

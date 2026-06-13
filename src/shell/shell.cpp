@@ -120,6 +120,29 @@ void Shell::execute() {
 
 		int pid = scheduler.create(entry, cr3);
 		terminal.printf("Started process %d\n", pid);
+	} else if (String(buffer) == "crash") {
+		File* program = VFS::open("./crash.elf");
+
+		if (program == nullptr) {
+			terminal.printf("Error: crash.elf not found.\n");
+			return;
+		}
+
+		uint64_t cr3 = create_address_space();
+
+		if (cr3 == 0) {
+			terminal.printf("Error: Out of memory.\n");
+			return;
+		}
+
+		void* entry = ELF::load(program->data, cr3);
+
+		if (entry == nullptr) {
+			return;
+		}
+
+		int pid = scheduler.create(entry, cr3);
+		terminal.printf("Started crash test as process %d\n", pid);
 	} else if (String(buffer) == "ush") {
 		File* program = VFS::open("./shell.elf");
 
