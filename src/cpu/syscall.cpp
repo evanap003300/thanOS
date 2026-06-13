@@ -29,9 +29,12 @@ static void sys_write(registers* regs) {
 // exit(code) -> rdi. Retire the slot, schedule someone else into
 // the frame iretq is about to restore.
 static void sys_exit(registers* regs) {
-	terminal.printf("\nProcess %d exited with code: %d\n", scheduler.current, (int)regs->rdi);
+	scheduler.exit_current(regs, (int)regs->rdi);
+}
 
-	scheduler.exit_current(regs);
+// wait() -> blocks until a child process exits; returns its exit code
+static void sys_wait(registers* regs) {
+	scheduler.wait_current(regs);
 }
 
 // read(fd, buf, count) -> rdi, rsi, rdx. Blocks until one key
@@ -103,6 +106,9 @@ void syscall_handler(registers* regs) {
 			break;
 		case SYS_EXIT:
 			sys_exit(regs);
+			break;
+		case SYS_WAIT:
+			sys_wait(regs);
 			break;
 		default:
 			terminal.printf("Unknown syscall: %d\n", (int)regs->rax);

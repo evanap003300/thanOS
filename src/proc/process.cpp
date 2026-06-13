@@ -52,6 +52,9 @@ int Scheduler::create(void* entry, uint64_t cr3) {
 	p->context.ss = 0x1B;
 
 	p->cr3 = cr3;
+	// Whoever is running right now is this process's parent:
+	// the kernel shell runs as process 0, a user spawner as itself
+	p->parent = current;
 	p->state = PROC_READY;
 
 	return slot;
@@ -93,8 +96,28 @@ void Scheduler::schedule(registers* regs) {
 	}
 }
 
-void Scheduler::exit_current(registers* regs) {
+void Scheduler::exit_current(registers* regs, int code) {
+	int parent = processes[current].parent;
+
 	processes[current].state = PROC_UNUSED;
+
+	// If our parent is asleep in wait(), this is the event that
+	// wakes it - hand it our exit code through its parked frame
+	if (parent >= 0 && processes[parent].state == PROC_WAITING) {
+		processes[parent].context.rax = (uint64_t)code;
+		processes[parent].state = PROC_READY;
+	}
+
+	schedule(regs);
+}
+
+void Scheduler::wait_current(registers* regs) {
+	// Same shape as block_current_for_read: park the frame (its RIP
+	// already points past the syscall), sleep, let someone else run.
+	// The waking happens in exit_current when a child dies.
+	processes[current].context = *regs;
+	processes[current].state = PROC_WAITING;
+
 	schedule(regs);
 }
 

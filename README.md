@@ -20,10 +20,27 @@
 * Blocking read() syscall: processes sleep waiting for keyboard input (interactive `echo` program)
 * spawn() syscall: a process can launch another process
 * Userland shell (`ush`): a shell running in ring 3, reads input and spawns child programs entirely via syscalls
+* wait() syscall: a parent process blocks until its child exits (completes the spawn/wait process model)
 
 ## Current to-dos:
-- [ ] wait() syscall (parent blocks until child exits)
-- [ ] Doom prerequisites: growable heap, faster timer, keyboard queue
+
+### Robustness (finish the process model)
+- [ ] User-fault isolation: a faulting process is killed, the kernel survives
+- [ ] Process reaping: free a dead process's pages, stack, and page tables on exit
+
+### Foundation for apps
+- [ ] Growable heap
+- [ ] Faster, readable timer (PIT ~1000 Hz)
+- [ ] Keyboard event queue
+
+### Projects
+- [ ] A simple graphical game (snake/pong)
+- [ ] FAT32 write support (persistence, note app)
+- [ ] Doom
+
+### Big tracks (later)
+- [ ] Multicore (SMP): boot the other cores via Limine, per-core TSS/scheduler, + spinlocks around shared kernel data (PMM, heap, scheduler, terminal)
+- [ ] Network stack (e1000 -> ARP/ICMP -> UDP/DNS -> TCP -> HTTP)
 - [ ] FAT32: follow cluster chains (multi-cluster files)
 - [ ] Doom :)
 

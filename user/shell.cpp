@@ -44,6 +44,8 @@ extern "C" void _start() {
 
 		if (streq(buffer, "hello")) {
 			spawn("./test.elf");
+			wait();
+			write("[ush] child finished\n");
 		} else if (streq(buffer, "mt")) {
 			spawn("./proc_a.elf");
 			spawn("./proc_b.elf");

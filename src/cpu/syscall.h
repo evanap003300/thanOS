@@ -5,6 +5,7 @@
 #define SYS_READ  0
 #define SYS_WRITE 1
 #define SYS_EXIT  60
+#define SYS_WAIT  61
 
 // Custom: Linux splits process creation into fork + execve;
 // thanOS does it in one call (for now)

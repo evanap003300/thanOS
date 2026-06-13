@@ -32,6 +32,11 @@ static inline int64_t spawn(const char* path) {
 	return syscall3(200, (uint64_t)path, 0, 0);
 }
 
+// Block until a child exits; returns the child's exit code
+static inline int64_t wait() {
+	return syscall3(61, 0, 0, 0);
+}
+
 static inline void exit(int code) {
 	syscall3(60, (uint64_t)code, 0, 0);
 	for (;;) { }
