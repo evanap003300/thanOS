@@ -86,6 +86,10 @@ void PageTableManager::map_memory(void* virtual_memory, void* physical_memory, u
 	__asm__ volatile ("invlpg (%0)" : : "r" (virtual_memory) : "memory");
 }
 
+uint64_t get_hhdm_offset() {
+	return hhdm_request.response->offset;
+}
+
 uint64_t create_address_space() {
 	void* phys = pmm.alloc_page();
 	if (phys == NULL) {

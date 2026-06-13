@@ -1,6 +1,7 @@
 #include "proc/process.h"
 #include "cpu/pmm.h"
 #include "cpu/vmm.h"
+#include "graphics/render.h"
 
 Scheduler scheduler;
 
@@ -76,6 +77,8 @@ void Scheduler::schedule(registers* regs) {
 		return;
 	}
 
+	terminal.printf("[%d>%d]", current, next);
+
 	current = next;
 
 	// The context switch: what iretq restores is now someone else
@@ -93,4 +96,43 @@ void Scheduler::schedule(registers* regs) {
 void Scheduler::exit_current(registers* regs) {
 	processes[current].state = PROC_UNUSED;
 	schedule(regs);
+}
+
+void Scheduler::block_current_for_read(registers* regs, uint64_t user_buf) {
+	// Park the frame as-is: its RIP already points at the
+	// instruction after int 0x80, so waking = resuming
+	processes[current].context = *regs;
+	processes[current].state = PROC_BLOCKED;
+	processes[current].read_buf = user_buf;
+
+	schedule(regs);
+}
+
+bool Scheduler::deliver_key(char c) {
+	for (int i = 1; i < MAX_PROCESSES; i++) {
+		if (processes[i].state != PROC_BLOCKED) {
+			continue;
+		}
+
+		// The buffer address only means something in THIS process's
+		// address space, and its CR3 may not be active right now -
+		// so translate through its page tables and write via the HHDM
+		PageTableManager proc_vmm((PageTable*)processes[i].cr3);
+		void* phys = proc_vmm.virt_to_phys((void*)processes[i].read_buf);
+
+		if (phys == NULL) {
+			return false;
+		}
+
+		*(char*)((uint64_t)phys + get_hhdm_offset()) = c;
+
+		// read() returns 1: written into the parked frame's rax,
+		// which becomes the syscall's return value on wake
+		processes[i].context.rax = 1;
+		processes[i].state = PROC_READY;
+
+		return true;
+	}
+
+	return false;
 }

@@ -35,3 +35,7 @@ extern PageTableManager kernel_vmm;
 // kernel half shared by reference. Returns its physical address
 // (i.e. a value you can load into CR3), or 0 on failure.
 uint64_t create_address_space();
+
+// The HHDM offset: phys + offset = a virtual address the kernel
+// can always dereference, regardless of which CR3 is active
+uint64_t get_hhdm_offset();

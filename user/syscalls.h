@@ -22,6 +22,16 @@ static inline int64_t write(const char* s) {
 	return syscall3(1, 1, (uint64_t)s, strlen(s));
 }
 
+// Blocks until one key arrives; the char lands in *buf
+static inline int64_t read(char* buf) {
+	return syscall3(0, 0, (uint64_t)buf, 1);
+}
+
+// Launch another program from the initrd; returns its pid or -1
+static inline int64_t spawn(const char* path) {
+	return syscall3(200, (uint64_t)path, 0, 0);
+}
+
 static inline void exit(int code) {
 	syscall3(60, (uint64_t)code, 0, 0);
 	for (;;) { }

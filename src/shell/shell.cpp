@@ -120,6 +120,75 @@ void Shell::execute() {
 
 		int pid = scheduler.create(entry, cr3);
 		terminal.printf("Started process %d\n", pid);
+	} else if (String(buffer) == "ush") {
+		File* program = VFS::open("./shell.elf");
+
+		if (program == nullptr) {
+			terminal.printf("Error: shell.elf not found.\n");
+			return;
+		}
+
+		uint64_t cr3 = create_address_space();
+
+		if (cr3 == 0) {
+			terminal.printf("Error: Out of memory.\n");
+			return;
+		}
+
+		void* entry = ELF::load(program->data, cr3);
+
+		if (entry == nullptr) {
+			return;
+		}
+
+		int pid = scheduler.create(entry, cr3);
+		terminal.printf("Started userland shell as process %d\n", pid);
+	} else if (String(buffer) == "launch") {
+		File* program = VFS::open("./launcher.elf");
+
+		if (program == nullptr) {
+			terminal.printf("Error: launcher.elf not found.\n");
+			return;
+		}
+
+		uint64_t cr3 = create_address_space();
+
+		if (cr3 == 0) {
+			terminal.printf("Error: Out of memory.\n");
+			return;
+		}
+
+		void* entry = ELF::load(program->data, cr3);
+
+		if (entry == nullptr) {
+			return;
+		}
+
+		int pid = scheduler.create(entry, cr3);
+		terminal.printf("Started process %d\n", pid);
+	} else if (String(buffer) == "echo") {
+		File* program = VFS::open("./echo.elf");
+
+		if (program == nullptr) {
+			terminal.printf("Error: echo.elf not found.\n");
+			return;
+		}
+
+		uint64_t cr3 = create_address_space();
+
+		if (cr3 == 0) {
+			terminal.printf("Error: Out of memory.\n");
+			return;
+		}
+
+		void* entry = ELF::load(program->data, cr3);
+
+		if (entry == nullptr) {
+			return;
+		}
+
+		int pid = scheduler.create(entry, cr3);
+		terminal.printf("Started process %d\n", pid);
 	} else if (String(buffer) == "mt") {
 		const char* names[2] = { "./proc_a.elf", "./proc_b.elf" };
 

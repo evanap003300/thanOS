@@ -2,6 +2,7 @@
 #include "drivers/pic.h"
 #include "graphics/render.h"
 #include "shell/shell.h"
+#include "proc/process.h"
 
 // The Translation Table: Scancode -> ASCII
 // This maps the first 58 keys (0-9, A-Z, some symbols)
@@ -53,7 +54,11 @@ extern "C" void keyboard_handler_main() {
 	terminal.draw_cursor(false);
 
 	if (scancode < 128 && keymap[scancode] != 0) {
-		shell.on_key_pressed(keymap[scancode]);
+		// A process blocked in read() has first claim on the key;
+		// the shell only gets it if nobody is waiting
+		if (!scheduler.deliver_key(keymap[scancode])) {
+			shell.on_key_pressed(keymap[scancode]);
+		}
 	}
 
 	terminal.draw_cursor(true);

@@ -17,9 +17,13 @@
 * Preemptive multitasking: timer-driven round-robin scheduler (`mt` runs two processes at once)
 * Per-process address spaces: every process gets its own page tables (CR3 switch in the scheduler), programs all link at the same virtual address
 
+* Blocking read() syscall: processes sleep waiting for keyboard input (interactive `echo` program)
+* spawn() syscall: a process can launch another process
+* Userland shell (`ush`): a shell running in ring 3, reads input and spawns child programs entirely via syscalls
+
 ## Current to-dos:
-- [ ] Blocking read() syscall (needs process states + per-process kernel stacks)
-- [ ] Shell as a user process
+- [ ] wait() syscall (parent blocks until child exits)
+- [ ] Doom prerequisites: growable heap, faster timer, keyboard queue
 - [ ] FAT32: follow cluster chains (multi-cluster files)
 - [ ] Doom :)
 
