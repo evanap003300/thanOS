@@ -38,8 +38,12 @@
 - [ ] FAT32 write support (persistence, note app)
 - [ ] Doom
 
-### Big tracks (later)
-- [ ] Multicore (SMP): boot the other cores via Limine, per-core TSS/scheduler, + spinlocks around shared kernel data (PMM, heap, scheduler, terminal)
+### Multicore (SMP) — in progress
+* Phase 1 DONE: boots all cores (Limine MP), per-core TSS + kernel stack, APs park (`-smp N` → "N cores online")
+- [ ] Phase 2: spinlocks around shared kernel data (PMM, heap, scheduler, terminal)
+- [ ] Phase 3: per-core identity + PIC→APIC migration, LAPIC timers
+- [ ] Phase 4: multicore scheduling (processes run in parallel across cores)
+- [ ] Phase 5: lock-free SPSC ring buffer for keyboard input
 - [ ] Network stack (e1000 -> ARP/ICMP -> UDP/DNS -> TCP -> HTTP)
 - [ ] FAT32: follow cluster chains (multi-cluster files)
 - [ ] Doom :)

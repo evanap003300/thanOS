@@ -23,5 +23,8 @@ class IDT {
 		
 		static void set_gate(uint8_t vector, void* istr, uint8_t flags);
 
+		// BSP: build the table and load it. AP: just load the
+		// already-built table on this core (lidt is per-core).
 		static void init();
+		static void load();
 };

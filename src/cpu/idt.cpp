@@ -99,3 +99,7 @@ void IDT::init() {
 
 	load_idt((uint64_t)&idtr);
 }
+
+void IDT::load() {
+	load_idt((uint64_t)&idtr);
+}

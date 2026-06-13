@@ -112,6 +112,7 @@ run: $(ISO) disk.img
 		-device ide-cd,drive=cd,bus=ide.1,unit=0 \
 		-boot d \
 		-m 512M \
+		-smp 4 \
 		-display sdl
 
 clean:
