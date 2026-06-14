@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "limine.h"
+#include "cpu/spinlock.h"
 
 #define PAGE_SIZE 4096
 
@@ -10,6 +11,7 @@ public:
 	uint8_t* bitmap;
 	uint64_t bitmap_size;
 	uint64_t total_ram_pages;
+	Spinlock lock;
 
 	void init();
 	void* alloc_page();

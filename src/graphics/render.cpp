@@ -26,6 +26,7 @@ void Renderer::put_pixel(uint32_t x, uint32_t y, uint32_t color) {
 void Renderer::draw_char(char c) {
 	if (!framebuffer) return;
 
+	uint64_t lf = lock.acquire();
 	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
 	uint64_t stride = framebuffer->width;
 
@@ -53,9 +54,12 @@ void Renderer::draw_char(char c) {
 	if (cursor_x >= framebuffer->width) {
 		next_line();
 	}
+
+	lock.release(lf);
 }
 
 void Renderer::clear() {
+	uint64_t lf = lock.acquire();
 	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
     	uint64_t width = framebuffer->width;
     	uint64_t height = framebuffer->height;
@@ -66,18 +70,22 @@ void Renderer::clear() {
 
 	cursor_x = 0;
 	cursor_y = 0;
+	lock.release(lf);
 }
 
 void Renderer::next_line() {
+	uint64_t lf = lock.acquire();
 	cursor_x = 0;
 	cursor_y += 16;
 
 	if (cursor_y >= framebuffer->height) {
 		scroll();
 	}
+	lock.release(lf);
 }
 
 void Renderer::print(const char* str) {
+	uint64_t lf = lock.acquire();
 	for (int i = 0; str[i] != '\0'; i++) {
 		if (str[i] == '\n') {
 			next_line();
@@ -85,6 +93,7 @@ void Renderer::print(const char* str) {
 			draw_char(str[i]);
 		}
 	}
+	lock.release(lf);
 }
 
 void Renderer::scroll() {
@@ -111,10 +120,12 @@ void Renderer::scroll() {
 }
 
 void Renderer::backspace() {
+	uint64_t lf = lock.acquire();
 	if (cursor_x == 0) {
+		lock.release(lf);
 		return;
-	}	
-	
+	}
+
 	cursor_x -= 8;
 	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
 
@@ -126,30 +137,34 @@ void Renderer::backspace() {
 	}
 
 	flush_framebuffer();
-
+	lock.release(lf);
 }
 
 void Renderer::draw_cursor(bool on) {
+	uint64_t lf = lock.acquire();
 	volatile uint32_t* fb_ptr = (uint32_t*)framebuffer->address;
 	uint32_t color = on ? 0xFFFFFFFF : 0xFF0E0E0E;
 
 	for (int i = 14; i < 16; i++) {
 		for (int j = 0; j < 8; j++) {
 			uint64_t index = (cursor_x + j) + (cursor_y + i) * (framebuffer->width);
-			
+
 			if (index < (framebuffer->width * framebuffer->height)) {
 				fb_ptr[index] = color;
 			}
-		}	
+		}
 	}
 
 	flush_framebuffer();
+	lock.release(lf);
 }
 
 void Renderer::toggle_cursor() {
+	uint64_t lf = lock.acquire();
 	cursor_visable = !cursor_visable;
-	
+
 	draw_cursor(cursor_visable);
+	lock.release(lf);
 }
 
 void Renderer::print_number(int number) {
@@ -214,6 +229,7 @@ void Renderer::print_hex(uint64_t number) {
 }
 
 void Renderer::printf(const char* format, ...) {
+	uint64_t lf = lock.acquire();
 	va_list args;
 	va_start(args, format);
 
@@ -267,6 +283,7 @@ void Renderer::printf(const char* format, ...) {
 	}
 	
 	va_end(args);
+	lock.release(lf);
 }
 
 void Renderer::setColor(uint32_t new_color) {

@@ -114,6 +114,8 @@ void PMM::init() {
 }
 
 void* PMM::alloc_page() {
+	uint64_t f = lock.acquire_irq();
+
 	for (uint64_t i = 0; i < bitmap_size; i++) {
 		if (bitmap[i] == 0xFF) {
 			continue;
@@ -123,27 +125,32 @@ void* PMM::alloc_page() {
 			if (!(bitmap[i] >> bit & 1)) {
 				uint64_t page_number = (i * 8) + bit;
 				bitmap_set(page_number);
-				uint64_t phys_addr = page_number * PAGE_SIZE;
-				return (void*)phys_addr;
+				lock.release_irq(f);
+				return (void*)(page_number * PAGE_SIZE);
 			}
 		}
 	}
 
+	lock.release_irq(f);
 	terminal.printf("CRITICAL: Out of Memory!\n");
 	return NULL;
 }
 
 void PMM::free_page(void* address) {
+	uint64_t f = lock.acquire_irq();
 	uint64_t phys_addr = (uint64_t)address;
 	uint64_t page_number = phys_addr / PAGE_SIZE;
 	bitmap_unset(page_number);
+	lock.release_irq(f);
 }
 
 uint64_t PMM::free_pages() {
+	uint64_t f = lock.acquire_irq();
 	uint64_t count = 0;
 	for (uint64_t i = 0; i < total_ram_pages; i++) {
 		if (!bitmap_test(i)) count++;
 	}
+	lock.release_irq(f);
 	return count;
 }
 

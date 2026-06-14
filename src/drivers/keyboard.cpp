@@ -3,6 +3,7 @@
 #include "graphics/render.h"
 #include "shell/shell.h"
 #include "proc/process.h"
+#include "cpu/apic.h"
 
 // The Translation Table: Scancode -> ASCII
 // This maps the first 58 keys (0-9, A-Z, some symbols)
@@ -47,7 +48,7 @@ extern "C" void keyboard_handler_main() {
 	uint8_t scancode = inb(0x60);
 
 	if (scancode & 0x80) {
-		pic_send_eoi(1);
+		lapic_eoi();
 		return;
 	}
 
@@ -64,5 +65,5 @@ extern "C" void keyboard_handler_main() {
 	terminal.draw_cursor(true);
 	timer_ticks = 0;
 
-	pic_send_eoi(1);
+	lapic_eoi();
 }

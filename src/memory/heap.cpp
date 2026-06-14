@@ -1,11 +1,13 @@
 #include "memory/heap.h"
 #include "cpu/pmm.h"
 #include "cpu/vmm.h"
+#include "cpu/spinlock.h"
 #include "graphics/render.h"
 
 void* heapStart;
 void* heapEnd;
 MemorySegmentHeader* firstHeader;
+static Spinlock heap_lock;
 
 void InitializeHeap(void* heapAddress, size_t pageCount) {
 	void* pos = heapAddress;
@@ -36,10 +38,11 @@ void* malloc(size_t size) {
 	}
 
 	if (size == 0) {
-		
+
 		return NULL;
 	}
 
+	uint64_t f = heap_lock.acquire_irq();
 	MemorySegmentHeader* current = firstHeader;
 
 	while (true) {
@@ -47,11 +50,13 @@ void* malloc(size_t size) {
 			if (current->length > size) {
 				current->Split(size);
 				current->free = false;
-				return (void*)((uint64_t)current + sizeof(MemorySegmentHeader));	
+				heap_lock.release_irq(f);
+				return (void*)((uint64_t)current + sizeof(MemorySegmentHeader));
 			}
 
 			if (current->length == size) {
 				current->free = false;
+				heap_lock.release_irq(f);
 				return (void*)((uint64_t)current + sizeof(MemorySegmentHeader));
 			}
 		}
@@ -63,6 +68,7 @@ void* malloc(size_t size) {
 		current = current->next;
 	}
 
+	heap_lock.release_irq(f);
 	return NULL;
 }
 
@@ -114,10 +120,12 @@ void MemorySegmentHeader::CombineBackward() {
 }
 
 void free(void* address) {
+	uint64_t f = heap_lock.acquire_irq();
 	MemorySegmentHeader* segment = (MemorySegmentHeader*)((size_t)address - sizeof(MemorySegmentHeader));
 	segment->free = true;
 	segment->CombineForward();
 	segment->CombineBackward();
+	heap_lock.release_irq(f);
 }
 
 void* operator new(size_t size) {

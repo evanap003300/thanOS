@@ -16,6 +16,8 @@
 #include "utils/io.h"
 #include "proc/process.h"
 #include "cpu/smp.h"
+#include "cpu/apic.h"
+#include "cpu/ioapic.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -147,7 +149,22 @@ extern "C" void kmain(void) {
 	terminal.printf("%s", sysInit.c_str());
 
 	terminal.setColor(0x00FF00);
+	apic_init_bsp();
 	smp_init();
+
+	// Switch the scheduling clock from the legacy PIT to the LAPIC
+	// timer: calibrate, start it (vector 48), then silence the PIT.
+	lapic_timer_calibrate();
+	lapic_timer_start();
+	pic_mask(0);
+	terminal.printf("[OK] LAPIC timer driving the scheduler\n");
+
+	// Route external interrupts (keyboard) through the IOAPIC and
+	// retire the legacy PIC entirely.
+	ioapic_init();
+
+	terminal.setColor(0x00FFFF);
+	smp_contention_test();
 
 	scheduler.init();
 

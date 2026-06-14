@@ -1,5 +1,6 @@
 #pragma once
 #include "cpu/interrupts.h"
+#include "cpu/spinlock.h"
 
 #define MAX_PROCESSES 8
 
@@ -28,10 +29,16 @@ public:
 	// Slot 0 is the kernel idle loop (kmain's hlt loop)
 	Process processes[MAX_PROCESSES];
 	int current;
+	Spinlock sched_lock;
 
 	void init();
 	int create(void* entry, uint64_t cr3);
+
+	// tick() is the locked entry from the timer ISR; schedule()
+	// is the worker and ASSUMES sched_lock is already held.
+	void tick(registers* regs);
 	void schedule(registers* regs);
+
 	void exit_current(registers* regs, int code);
 	void block_current_for_read(registers* regs, uint64_t user_buf);
 	bool deliver_key(char c);

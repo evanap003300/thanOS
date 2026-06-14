@@ -1,7 +1,8 @@
-#pragma once 
+#pragma once
 #include <stdint.h>
 #include "limine.h"
 #include <stdarg.h>
+#include "cpu/rlock.h"
 
 class Renderer {
 	public:
@@ -10,6 +11,7 @@ class Renderer {
 		uint32_t cursor_x;
 		uint32_t cursor_y;
 		bool cursor_visable;
+		ReentrantLock lock;
 
 		Renderer();
 

@@ -14,6 +14,8 @@ void Scheduler::init() {
 }
 
 int Scheduler::create(void* entry, uint64_t cr3) {
+	uint64_t f = sched_lock.acquire_irq();
+
 	int slot = -1;
 	for (int i = 1; i < MAX_PROCESSES; i++) {
 		if (processes[i].state == PROC_UNUSED) {
@@ -23,6 +25,7 @@ int Scheduler::create(void* entry, uint64_t cr3) {
 	}
 
 	if (slot == -1) {
+		sched_lock.release_irq(f);
 		return -1;
 	}
 
@@ -36,6 +39,7 @@ int Scheduler::create(void* entry, uint64_t cr3) {
 	for (uint64_t page = stack_base; page < stack_top; page += 0x1000) {
 		void* phys = pmm.alloc_page();
 		if (phys == NULL) {
+			sched_lock.release_irq(f);
 			return -1;
 		}
 		user_vmm.map_memory((void*)page, phys, PTE_USER_SUPER);
@@ -57,7 +61,15 @@ int Scheduler::create(void* entry, uint64_t cr3) {
 	p->parent = current;
 	p->state = PROC_READY;
 
+	sched_lock.release_irq(f);
 	return slot;
+}
+
+void Scheduler::tick(registers* regs) {
+	// The locked entry point from the timer ISR.
+	uint64_t f = sched_lock.acquire_irq();
+	schedule(regs);
+	sched_lock.release_irq(f);
 }
 
 void Scheduler::schedule(registers* regs) {
@@ -97,6 +109,8 @@ void Scheduler::schedule(registers* regs) {
 }
 
 void Scheduler::exit_current(registers* regs, int code) {
+	uint64_t f = sched_lock.acquire_irq();
+
 	int parent = processes[current].parent;
 	uint64_t dead_cr3 = processes[current].cr3;
 
@@ -116,9 +130,12 @@ void Scheduler::exit_current(registers* regs, int code) {
 	free_address_space(dead_cr3);
 
 	schedule(regs);
+	sched_lock.release_irq(f);
 }
 
 void Scheduler::wait_current(registers* regs) {
+	uint64_t f = sched_lock.acquire_irq();
+
 	// Same shape as block_current_for_read: park the frame (its RIP
 	// already points past the syscall), sleep, let someone else run.
 	// The waking happens in exit_current when a child dies.
@@ -126,9 +143,12 @@ void Scheduler::wait_current(registers* regs) {
 	processes[current].state = PROC_WAITING;
 
 	schedule(regs);
+	sched_lock.release_irq(f);
 }
 
 void Scheduler::block_current_for_read(registers* regs, uint64_t user_buf) {
+	uint64_t f = sched_lock.acquire_irq();
+
 	// Park the frame as-is: its RIP already points at the
 	// instruction after int 0x80, so waking = resuming
 	processes[current].context = *regs;
@@ -136,9 +156,12 @@ void Scheduler::block_current_for_read(registers* regs, uint64_t user_buf) {
 	processes[current].read_buf = user_buf;
 
 	schedule(regs);
+	sched_lock.release_irq(f);
 }
 
 bool Scheduler::deliver_key(char c) {
+	uint64_t f = sched_lock.acquire_irq();
+
 	for (int i = 1; i < MAX_PROCESSES; i++) {
 		if (processes[i].state != PROC_BLOCKED) {
 			continue;
@@ -151,6 +174,7 @@ bool Scheduler::deliver_key(char c) {
 		void* phys = proc_vmm.virt_to_phys((void*)processes[i].read_buf);
 
 		if (phys == NULL) {
+			sched_lock.release_irq(f);
 			return false;
 		}
 
@@ -161,8 +185,10 @@ bool Scheduler::deliver_key(char c) {
 		processes[i].context.rax = 1;
 		processes[i].state = PROC_READY;
 
+		sched_lock.release_irq(f);
 		return true;
 	}
 
+	sched_lock.release_irq(f);
 	return false;
 }

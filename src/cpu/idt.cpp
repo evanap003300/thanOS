@@ -38,6 +38,7 @@ extern "C" void isr30();
 extern "C" void isr31();
 extern "C" void isr32();
 extern "C" void isr33();
+extern "C" void isr48();
 extern "C" void isr128();
 
 void IDT::set_gate(uint8_t vector, void* isr, uint8_t flags) {
@@ -92,6 +93,7 @@ void IDT::init() {
     	set_gate(31, (void*)isr31, 0x8E);
 	set_gate(32, (void*)isr32, 0x8E);
 	set_gate(33, (void*)isr33, 0x8E);
+	set_gate(48, (void*)isr48, 0x8E);
 
 	// Syscall gate: 0xEE = same as 0x8E but DPL=3, so ring 3
 	// is allowed to trigger it with int 0x80

@@ -40,9 +40,9 @@
 
 ### Multicore (SMP) — in progress
 * Phase 1 DONE: boots all cores (Limine MP), per-core TSS + kernel stack, APs park (`-smp N` → "N cores online")
-- [ ] Phase 2: spinlocks around shared kernel data (PMM, heap, scheduler, terminal)
-- [ ] Phase 3: per-core identity + PIC→APIC migration, LAPIC timers
-- [ ] Phase 4: multicore scheduling (processes run in parallel across cores)
+* Phase 2 DONE: spinlock + interrupt-safe variant (`spinlock.h`); PMM, heap, scheduler guarded (terminal deferred to Phase 3)
+* Phase 3 DONE: full PIC→APIC migration — per-core LAPIC IDs, LAPIC timer scheduling, IOAPIC keyboard (ACPI MADT parse), legacy PIC retired, reentrant terminal lock
+- [ ] Phase 4: multicore scheduling (unleash the APs — per-core current process, parallel execution)
 - [ ] Phase 5: lock-free SPSC ring buffer for keyboard input
 - [ ] Network stack (e1000 -> ARP/ICMP -> UDP/DNS -> TCP -> HTTP)
 - [ ] FAT32: follow cluster chains (multi-cluster files)

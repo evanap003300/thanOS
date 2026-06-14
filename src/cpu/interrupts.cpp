@@ -4,6 +4,7 @@
 #include "drivers/pic.h"
 #include "utils/io.h"
 #include "proc/process.h"
+#include "cpu/apic.h"
 
 extern "C" void keyboard_handler_main();
 
@@ -57,11 +58,23 @@ extern "C" void isr_handler(registers* regs) {
 		pic_send_eoi(0);
 
 		// Every tick is a scheduling opportunity: this may swap
-		// the frame that iretq is about to restore
-		scheduler.schedule(regs);
+		// the frame that iretq is about to restore (tick() takes
+		// the scheduler lock around the switch)
+		scheduler.tick(regs);
 		return;
 	} else if (int_num == 33) {
 		keyboard_handler_main();
+		return;
+	} else if (int_num == 48) {
+		// LAPIC timer: the scheduling tick (replaces the legacy PIT).
+		// ~100 Hz, so toggle the cursor every 50 ticks (~0.5s).
+		timer_ticks++;
+		if (timer_ticks % 50 == 0) {
+			terminal.toggle_cursor();
+		}
+
+		scheduler.tick(regs);
+		lapic_eoi();
 		return;
 	} else if (int_num == 128) {
 		// Software interrupt: no PIC involved, no EOI needed
