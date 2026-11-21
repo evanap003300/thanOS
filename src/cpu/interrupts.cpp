@@ -5,6 +5,7 @@
 #include "utils/io.h"
 #include "proc/process.h"
 #include "cpu/apic.h"
+#include "cpu/smp.h"
 
 extern "C" void keyboard_handler_main();
 
@@ -17,7 +18,7 @@ extern "C" void isr_handler(registers* regs) {
 		// Fault from ring 3 (CS low bits == 3): a user process crashed.
 		// Kill just that process and reschedule - the kernel survives.
 		if (regs->cs & 3) {
-			terminal.printf("[process %d faulted: exception %d] killed\n", scheduler.current, (int)int_num);
+			terminal.printf("[process %d faulted: exception %d] killed\n", scheduler.current_pid(), (int)int_num);
 			scheduler.exit_current(regs, -1);
 			return;
 		}
@@ -67,10 +68,14 @@ extern "C" void isr_handler(registers* regs) {
 		return;
 	} else if (int_num == 48) {
 		// LAPIC timer: the scheduling tick (replaces the legacy PIT).
-		// ~100 Hz, so toggle the cursor every 50 ticks (~0.5s).
-		timer_ticks++;
-		if (timer_ticks % 50 == 0) {
-			terminal.toggle_cursor();
+		// Every core has its own, all on this vector, ~100 Hz each.
+		// Only core 0 keeps the clock and blinks the cursor (every
+		// 50 ticks, ~0.5s) - otherwise it would blink once per core.
+		if (smp_core_id() == 0) {
+			timer_ticks++;
+			if (timer_ticks % 50 == 0) {
+				terminal.toggle_cursor();
+			}
 		}
 
 		scheduler.tick(regs);

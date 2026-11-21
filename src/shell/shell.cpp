@@ -36,6 +36,8 @@ void Shell::execute() {
 		terminal.printf("ap_ev\n");
 	} else if (String(buffer) == "clear") {
 		terminal.clear();
+	} else if (String(buffer) == "ps") {
+		scheduler.print_processes();
 	} else if (String(buffer) == "mem") {
 		uint64_t free = pmm.free_pages();
 		terminal.printf("Free: %d pages (%d KB)\n", free, free * 4);

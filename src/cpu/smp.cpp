@@ -20,6 +20,9 @@ static volatile uint64_t total_cores = 1;
 static volatile uint64_t hammer_done = 0;
 static volatile bool hammer_go = false;
 
+// Set by the BSP when the scheduler is ready for the other cores
+static volatile bool sched_go = false;
+
 // Run on every core. The hammer_go gate releases all cores at once
 // for maximum overlap, then each adds to both counters the same
 // number of times.
@@ -55,8 +58,7 @@ volatile uint64_t cores_online = 1;
 extern "C" void ap_entry(struct limine_mp_info* info) {
 	int core_id = (int)info->extra_argument;
 
-	// Load this core's own view of the per-core CPU tables, then park.
-	// No interrupts yet - APs stay halted until the scheduler (Phase 4).
+	// Load this core's own view of the per-core CPU tables
 	GDT::load_on_core(core_id);
 	IDT::load();
 	apic_init_ap();
@@ -64,11 +66,21 @@ extern "C" void ap_entry(struct limine_mp_info* info) {
 
 	__atomic_fetch_add(&cores_online, 1, __ATOMIC_SEQ_CST);
 
-	// Join the contention test, then park.
+	// Join the contention test, then wait for the BSP to finish
+	// setting up the scheduler
 	hammer();
 
+	while (!__atomic_load_n(&sched_go, __ATOMIC_ACQUIRE)) {
+		__builtin_ia32_pause();
+	}
+
+	// From here this core schedules like the BSP does: its own LAPIC
+	// timer calls into the scheduler, and this loop is what the core
+	// runs when there is no process for it
+	lapic_timer_start();
+
 	for (;;) {
-		asm volatile ("hlt");
+		asm volatile ("sti; hlt");
 	}
 }
 
@@ -139,4 +151,26 @@ void smp_contention_test() {
 			locked_counter == expected ? "(exact!)" : "(LOST UPDATES)");
 	terminal.printf("  without lock: %d  %s\n", unlocked_counter,
 			unlocked_counter == expected ? "(exact)" : "(lost updates - race!)");
+}
+
+void smp_start_scheduling() {
+	__atomic_store_n(&sched_go, true, __ATOMIC_RELEASE);
+}
+
+int smp_core_id() {
+	// A core's identity is its LAPIC ID; the table maps it back to
+	// the small index everything else uses
+	uint32_t id = lapic_id();
+
+	for (uint64_t i = 0; i < total_cores; i++) {
+		if (core_lapic_ids[i] == id) {
+			return (int)i;
+		}
+	}
+
+	return 0;
+}
+
+int smp_core_count() {
+	return (int)total_cores;
 }

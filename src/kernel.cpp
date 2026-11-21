@@ -169,6 +169,12 @@ extern "C" void kmain(void) {
 
 	scheduler.init();
 
+	// The scheduler exists now: the other cores can start their
+	// timers and take processes
+	smp_start_scheduling();
+	terminal.setColor(0x00FF00);
+	terminal.printf("[OK] Scheduler running on %d cores\n", smp_core_count());
+
 	terminal.setColor(0xFFFFFF);
 	shell.init();
 

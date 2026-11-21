@@ -18,10 +18,17 @@ static void sys_write(registers* regs) {
 		return;
 	}
 
+	// Hold the terminal for the whole call. The lock is re-entrant, so
+	// printf can still take it; without this, two processes writing
+	// from different cores would interleave character by character.
+	uint64_t lf = terminal.lock.acquire();
+
 	const char* str = (const char*)buf;
 	for (uint64_t i = 0; i < count; i++) {
 		terminal.printf("%c", str[i]);
 	}
+
+	terminal.lock.release(lf);
 
 	regs->rax = count;
 }

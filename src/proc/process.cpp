@@ -1,17 +1,26 @@
 #include "proc/process.h"
 #include "cpu/pmm.h"
 #include "cpu/vmm.h"
+#include "cpu/smp.h"
 #include "graphics/render.h"
 #include "drivers/keyboard.h"
 
 Scheduler scheduler;
 
 void Scheduler::init() {
-	// The kernel idle loop is process 0. Its context gets saved
-	// the first time we switch away from it.
+	// Slot 0 is the kernel. It is never scheduled; it only marks the
+	// slot as taken and remembers the kernel's address space.
 	processes[0].state = PROC_READY;
 	__asm__ volatile ("mov %%cr3, %0" : "=r"(processes[0].cr3));
-	current = 0;
+
+	// Every core starts out idle
+	for (int i = 0; i < MAX_CORES; i++) {
+		current[i] = 0;
+	}
+}
+
+int Scheduler::current_pid() {
+	return current[smp_core_id()];
 }
 
 int Scheduler::create(void* entry, uint64_t cr3) {
@@ -32,7 +41,6 @@ int Scheduler::create(void* entry, uint64_t cr3) {
 
 	// Every process sees its 16 KiB stack at the same virtual
 	// address - separate address spaces make that legal.
-	// Physical pages are never freed (no cleanup yet).
 	PageTableManager user_vmm((PageTable*)cr3);
 	uint64_t stack_base = 0x150000000;
 	uint64_t stack_top = stack_base + 0x4000;
@@ -57,9 +65,14 @@ int Scheduler::create(void* entry, uint64_t cr3) {
 	p->context.ss = 0x1B;
 
 	p->cr3 = cr3;
-	// Whoever is running right now is this process's parent:
-	// the kernel shell runs as process 0, a user spawner as itself
-	p->parent = current;
+	p->core = -1;
+	// Whoever is running on this core is the new process's parent:
+	// 0 when the kernel shell started it, a user spawner otherwise
+	p->parent = current[smp_core_id()];
+	p->exited_children = 0;
+	p->exit_code = 0;
+
+	// From this line on, any core's next tick may pick it up
 	p->state = PROC_READY;
 
 	sched_lock.release_irq(f);
@@ -74,19 +87,29 @@ void Scheduler::tick(registers* regs) {
 }
 
 void Scheduler::schedule(registers* regs) {
-	// Park the state of whoever was running
-	if (processes[current].state == PROC_READY) {
-		processes[current].context = *regs;
+	int core = smp_core_id();
+	int cur = current[core];
+
+	// Park whoever was running here. A process that just blocked or
+	// exited was already dealt with by the caller, so only a process
+	// that is still RUNNING goes back in the queue. The moment it is
+	// READY another core may take it - that is safe because its whole
+	// state is this saved frame; nothing of it lives on our stack.
+	if (cur == 0) {
+		idle_context[core] = *regs;
+	} else if (processes[cur].state == PROC_RUNNING) {
+		processes[cur].context = *regs;
+		processes[cur].state = PROC_READY;
 	}
 
-	// Round robin over user slots; idle (0) only if nothing is ready.
-	// The exception is pending keyboard input: process 0's loop is the
-	// key ring's only consumer, so it has to run before anyone can be
-	// handed those keys
+	// Round robin over the shared queue, starting after the slot we
+	// just ran; idle (0) if nothing is ready. The exception is core 0
+	// with keys waiting: its idle loop is the key ring's only
+	// consumer, so it has to run before anyone can be handed them.
 	int next = 0;
-	if (!keyboard_pending()) {
+	if (!(core == 0 && keyboard_pending())) {
 		for (int off = 1; off <= MAX_PROCESSES; off++) {
-			int i = (current + off) % MAX_PROCESSES;
+			int i = (cur + off) % MAX_PROCESSES;
 			if (i != 0 && processes[i].state == PROC_READY) {
 				next = i;
 				break;
@@ -94,44 +117,77 @@ void Scheduler::schedule(registers* regs) {
 		}
 	}
 
-	if (next == current) {
+	if (next != 0) {
+		// Claim it before the lock is dropped so no other core can
+		processes[next].state = PROC_RUNNING;
+		processes[next].core = core;
+	}
+
+	if (next == cur) {
+		// Same process (or still idle): the frame iretq is about
+		// to restore is already the right one
 		return;
 	}
 
-	terminal.printf("[%d>%d]", current, next);
+	terminal.printf("[cpu%d %d>%d]", core, cur, next);
 
-	current = next;
+	current[core] = next;
 
 	// The context switch: what iretq restores is now someone else
-	*regs = processes[current].context;
+	uint64_t next_cr3;
+	if (next == 0) {
+		*regs = idle_context[core];
+		next_cr3 = processes[0].cr3;
+	} else {
+		*regs = processes[next].context;
+		next_cr3 = processes[next].cr3;
+	}
 
 	// Writing CR3 flushes the TLB, so skip it when the next
 	// process lives in the same address space
 	uint64_t active_cr3;
 	__asm__ volatile ("mov %%cr3, %0" : "=r"(active_cr3));
-	if (active_cr3 != processes[current].cr3) {
-		__asm__ volatile ("mov %0, %%cr3" : : "r"(processes[current].cr3) : "memory");
+	if (active_cr3 != next_cr3) {
+		__asm__ volatile ("mov %0, %%cr3" : : "r"(next_cr3) : "memory");
 	}
 }
 
 void Scheduler::exit_current(registers* regs, int code) {
 	uint64_t f = sched_lock.acquire_irq();
 
-	int parent = processes[current].parent;
-	uint64_t dead_cr3 = processes[current].cr3;
+	int cur = current[smp_core_id()];
+	int parent = processes[cur].parent;
+	uint64_t dead_cr3 = processes[cur].cr3;
 
-	processes[current].state = PROC_UNUSED;
+	processes[cur].state = PROC_UNUSED;
 
-	// If our parent is asleep in wait(), this is the event that
-	// wakes it - hand it our exit code through its parked frame
-	if (parent >= 0 && processes[parent].state == PROC_WAITING) {
-		processes[parent].context.rax = (uint64_t)code;
-		processes[parent].state = PROC_READY;
+	// This slot will be reused. Any children still alive must not
+	// report their exit to whoever lands in it next.
+	for (int i = 1; i < MAX_PROCESSES; i++) {
+		if (processes[i].state != PROC_UNUSED && processes[i].parent == cur) {
+			processes[i].parent = -1;
+		}
+	}
+
+	if (parent > 0 && processes[parent].state != PROC_UNUSED) {
+		if (processes[parent].state == PROC_WAITING) {
+			// The parent is asleep in wait(): this is the event
+			// that wakes it - hand over the exit code through
+			// its parked frame
+			processes[parent].context.rax = (uint64_t)code;
+			processes[parent].state = PROC_READY;
+		} else {
+			// The parent has not called wait() yet. With the
+			// child free to run on another core that is a real
+			// race, so remember the exit instead of losing it.
+			processes[parent].exited_children++;
+			processes[parent].exit_code = code;
+		}
 	}
 
 	// We're still standing on the dying process's page tables. Step
-	// onto the kernel's address space (process 0's, shared kernel half
-	// keeps our code + stack mapped) before tearing the dead one down.
+	// onto the kernel's address space (the shared kernel half keeps
+	// our code + stack mapped) before tearing the dead one down.
 	__asm__ volatile ("mov %0, %%cr3" : : "r"(processes[0].cr3) : "memory");
 	free_address_space(dead_cr3);
 
@@ -142,11 +198,37 @@ void Scheduler::exit_current(registers* regs, int code) {
 void Scheduler::wait_current(registers* regs) {
 	uint64_t f = sched_lock.acquire_irq();
 
+	int cur = current[smp_core_id()];
+
+	// A child already finished (it may have run to completion on
+	// another core before we got here): return its code right away
+	if (processes[cur].exited_children > 0) {
+		processes[cur].exited_children--;
+		regs->rax = (uint64_t)processes[cur].exit_code;
+		sched_lock.release_irq(f);
+		return;
+	}
+
+	// No children at all: nobody would ever wake us
+	bool has_child = false;
+	for (int i = 1; i < MAX_PROCESSES; i++) {
+		if (processes[i].state != PROC_UNUSED && processes[i].parent == cur) {
+			has_child = true;
+			break;
+		}
+	}
+
+	if (!has_child) {
+		regs->rax = (uint64_t)-1;
+		sched_lock.release_irq(f);
+		return;
+	}
+
 	// Same shape as block_current_for_read: park the frame (its RIP
 	// already points past the syscall), sleep, let someone else run.
 	// The waking happens in exit_current when a child dies.
-	processes[current].context = *regs;
-	processes[current].state = PROC_WAITING;
+	processes[cur].context = *regs;
+	processes[cur].state = PROC_WAITING;
 
 	schedule(regs);
 	sched_lock.release_irq(f);
@@ -155,11 +237,13 @@ void Scheduler::wait_current(registers* regs) {
 void Scheduler::block_current_for_read(registers* regs, uint64_t user_buf) {
 	uint64_t f = sched_lock.acquire_irq();
 
+	int cur = current[smp_core_id()];
+
 	// Park the frame as-is: its RIP already points at the
 	// instruction after int 0x80, so waking = resuming
-	processes[current].context = *regs;
-	processes[current].state = PROC_BLOCKED;
-	processes[current].read_buf = user_buf;
+	processes[cur].context = *regs;
+	processes[cur].state = PROC_BLOCKED;
+	processes[cur].read_buf = user_buf;
 
 	schedule(regs);
 	sched_lock.release_irq(f);
@@ -174,8 +258,8 @@ bool Scheduler::deliver_key(char c) {
 		}
 
 		// The buffer address only means something in THIS process's
-		// address space, and its CR3 may not be active right now -
-		// so translate through its page tables and write via the HHDM
+		// address space, and its CR3 is not active here - so
+		// translate through its page tables and write via the HHDM
 		PageTableManager proc_vmm((PageTable*)processes[i].cr3);
 		void* phys = proc_vmm.virt_to_phys((void*)processes[i].read_buf);
 
@@ -187,7 +271,8 @@ bool Scheduler::deliver_key(char c) {
 		*(char*)((uint64_t)phys + get_hhdm_offset()) = c;
 
 		// read() returns 1: written into the parked frame's rax,
-		// which becomes the syscall's return value on wake
+		// which becomes the syscall's return value on wake.
+		// Whichever core ticks next picks the process up.
 		processes[i].context.rax = 1;
 		processes[i].state = PROC_READY;
 
@@ -197,4 +282,37 @@ bool Scheduler::deliver_key(char c) {
 
 	sched_lock.release_irq(f);
 	return false;
+}
+
+void Scheduler::print_processes() {
+	// Copy what we need under the lock, print after letting go of it:
+	// drawing text is slow and every core's tick wants this lock
+	ProcessState states[MAX_PROCESSES];
+	int cores[MAX_PROCESSES];
+
+	uint64_t f = sched_lock.acquire_irq();
+	for (int i = 0; i < MAX_PROCESSES; i++) {
+		states[i] = processes[i].state;
+		cores[i] = processes[i].core;
+	}
+	sched_lock.release_irq(f);
+
+	terminal.printf("%d cores online\n", smp_core_count());
+	terminal.printf("PID  STATE    CORE\n");
+
+	for (int i = 1; i < MAX_PROCESSES; i++) {
+		if (states[i] == PROC_UNUSED) {
+			continue;
+		}
+
+		if (states[i] == PROC_RUNNING) {
+			terminal.printf("%d    running  %d\n", i, cores[i]);
+		} else if (states[i] == PROC_READY) {
+			terminal.printf("%d    ready    -\n", i);
+		} else if (states[i] == PROC_BLOCKED) {
+			terminal.printf("%d    blocked  -   (in read)\n", i);
+		} else {
+			terminal.printf("%d    waiting  -   (in wait)\n", i);
+		}
+	}
 }
