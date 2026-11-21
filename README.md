@@ -36,6 +36,10 @@ programs in their own address spaces, and schedules them preemptively.
   ACPI MADT.
 - Spinlocks (plain, interrupt-safe, and a re-entrant one for the terminal)
   guard the page allocator, the heap and the scheduler.
+- Keyboard input crosses from the interrupt handler to the kernel's main loop
+  through a lock-free SPSC ring. The handler only queues the key; running the
+  shell command or waking the process blocked in `read()` happens outside
+  interrupt context.
 - The extra cores do not run processes yet. After boot they join a lock
   contention test (the last lines of the screenshot above) and park. Scheduling
   across cores is the next step.
@@ -81,6 +85,7 @@ src/memory/    kernel heap
 src/loader/    ELF loader
 src/fs/        tar initrd, VFS, MBR, FAT32
 src/drivers/   keyboard, ATA, legacy PIC
+src/utils/     port I/O, the SPSC ring
 src/graphics/  framebuffer text renderer
 src/std/       String, Vector
 src/shell/     the in-kernel shell
@@ -90,7 +95,6 @@ user/          ring-3 programs and the syscall wrappers they use
 ## Next
 
 - [ ] Run processes on every core (per-core run state, parallel execution)
-- [ ] Lock-free SPSC ring for keyboard input
 - [ ] Growable heap
 - [ ] FAT32 cluster chains and write support
 - [ ] Network stack (e1000, then ARP/ICMP, UDP, TCP)
