@@ -2,6 +2,7 @@
 #include "cpu/pmm.h"
 #include "cpu/vmm.h"
 #include "graphics/render.h"
+#include "drivers/keyboard.h"
 
 Scheduler scheduler;
 
@@ -78,13 +79,18 @@ void Scheduler::schedule(registers* regs) {
 		processes[current].context = *regs;
 	}
 
-	// Round robin over user slots; idle (0) only if nothing is ready
+	// Round robin over user slots; idle (0) only if nothing is ready.
+	// The exception is pending keyboard input: process 0's loop is the
+	// key ring's only consumer, so it has to run before anyone can be
+	// handed those keys
 	int next = 0;
-	for (int off = 1; off <= MAX_PROCESSES; off++) {
-		int i = (current + off) % MAX_PROCESSES;
-		if (i != 0 && processes[i].state == PROC_READY) {
-			next = i;
-			break;
+	if (!keyboard_pending()) {
+		for (int off = 1; off <= MAX_PROCESSES; off++) {
+			int i = (current + off) % MAX_PROCESSES;
+			if (i != 0 && processes[i].state == PROC_READY) {
+				next = i;
+				break;
+			}
 		}
 	}
 

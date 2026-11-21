@@ -18,6 +18,7 @@
 #include "cpu/smp.h"
 #include "cpu/apic.h"
 #include "cpu/ioapic.h"
+#include "drivers/keyboard.h"
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_framebuffer_request framebuffer_request = {
@@ -171,7 +172,20 @@ extern "C" void kmain(void) {
 	terminal.setColor(0xFFFFFF);
 	shell.init();
 
+	// From here on kmain is process 0: it routes keyboard input and
+	// otherwise sleeps
 	while (true) {
-		__asm__ volatile ("hlt");
+		keyboard_pump();
+
+		// Sleep until the next interrupt - unless a key arrived after
+		// the pump's last look. sti only takes effect after the
+		// instruction that follows it, so with "sti; hlt" no interrupt
+		// can land between the check and the hlt
+		__asm__ volatile ("cli");
+		if (keyboard_pending()) {
+			__asm__ volatile ("sti");
+		} else {
+			__asm__ volatile ("sti; hlt");
+		}
 	}
 }
