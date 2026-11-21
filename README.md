@@ -2,7 +2,8 @@
 
 A 64-bit x86 kernel written from scratch in freestanding C++ with a little
 assembly. No libc, no STL. It boots every core through Limine, runs ring-3
-programs in their own address spaces, and schedules them preemptively.
+programs in their own address spaces, and schedules them preemptively across
+all of the cores.
 
 ![thanOS booting on 4 cores](docs/boot.png)
 
@@ -20,8 +21,10 @@ programs in their own address spaces, and schedules them preemptively.
 - ELF64 loader, and ring 3 through user segments in the GDT plus a TSS per core.
 - Syscalls over `int 0x80` with Linux's numbers: `read`, `write`, `exit`,
   `wait`, and a `spawn` that stands in for fork + exec.
-- Preemptive round-robin scheduler driven by the LAPIC timer. `read()` and
-  `wait()` block, and the process is woken by a keypress or a child exiting.
+- Preemptive round-robin scheduling on every core. Each core has its own LAPIC
+  timer and pulls from one shared run queue, so processes run in parallel and
+  move between cores. `read()` and `wait()` block, and the process is woken by
+  a keypress or a child exiting.
 - Fault isolation: a process that faults is killed and the kernel keeps
   running. On exit its pages, page tables and PML4 are freed.
 - `ush`, a shell that runs in ring 3 and reads input and launches children
@@ -40,9 +43,12 @@ programs in their own address spaces, and schedules them preemptively.
   through a lock-free SPSC ring. The handler only queues the key; running the
   shell command or waking the process blocked in `read()` happens outside
   interrupt context.
-- The extra cores do not run processes yet. After boot they join a lock
-  contention test (the last lines of the screenshot above) and park. Scheduling
-  across cores is the next step.
+- Moving a process between cores is cheap because the kernel keeps no
+  per-process stack: a process is its saved register frame plus its page
+  tables, so a core that parks one can hand it to any other core on the next
+  tick. A core with nothing to run sits in its own idle loop.
+- Before the scheduler starts, every core runs a lock contention test (the
+  `LOCK TEST` lines in the screenshot above).
 
 **Storage**
 - An initrd: a tar archive loaded as a Limine module and exposed through a
@@ -58,13 +64,20 @@ programs in their own address spaces, and schedules them preemptively.
 
 ![shell session](docs/session.png)
 
-- `mount`, `ls`, `cat` read the FAT32 partition on the attached disk.
 - `crash` starts a program that dereferences a null pointer. The page fault
   kills that process only, and `mem` reports the same free page count before
   and after.
-- `ush` starts the userland shell. `hello` there spawns a child and waits for
-  it. The child's output reaches the screen through `int 0x80`.
-- The `[1>0]` markers are the scheduler tracing its context switches.
+- `mt` starts two CPU-bound programs. Cores 3 and 2 pick them up and run them
+  at the same time. `ps`, typed on core 0 while they are running, shows each on
+  its own core.
+- `ush` starts the userland shell. Every time it blocks in `read()` and wakes,
+  whichever core ticks first takes it, so it hops between cores. `hello` there
+  spawns a child and waits for it; the child's output reaches the screen
+  through `int 0x80`.
+- The `[cpu3 0>1]` markers are the scheduler tracing its context switches:
+  the core, the slot it was running, the slot it runs next (0 is idle).
+- Not shown: `mount`, `ls` and `cat` read the FAT32 partition on the attached
+  disk.
 
 ## Build and run
 
@@ -94,7 +107,9 @@ user/          ring-3 programs and the syscall wrappers they use
 
 ## Next
 
-- [ ] Run processes on every core (per-core run state, parallel execution)
+- [ ] Reschedule IPIs, so an idle core takes new work at once instead of on
+      its next tick
+- [ ] Per-core run queues
 - [ ] Growable heap
 - [ ] FAT32 cluster chains and write support
 - [ ] Network stack (e1000, then ARP/ICMP, UDP, TCP)
