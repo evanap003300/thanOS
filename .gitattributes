@@ -1,0 +1,7 @@
+# Limine and the bitmap font are third-party; keep them out of the language stats.
+Limine/** linguist-vendored
+src/limine.h linguist-vendored
+src/graphics/font.h linguist-vendored
+
+# The kernel headers are C++, not C.
+*.h linguist-language=C++
